@@ -1,0 +1,20 @@
+[package]
+name = "rtactor-macros"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Proc macro crate for the rtactor real-time actor framework."
+readme = "README.md"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+proc-macro = true
+
+[dependencies]
+
+syn = "1.0"
+quote = "1.0"
+proc-macro2 = "1.0"
+convert_case = "0.4.0"
