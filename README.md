@@ -677,3 +677,8 @@ fixed size queue with data from the heap.
 The use of messages embedding the data and the pointers of the linked list,
 allocated from a memory pool, is a possible solution to have to only handle
 (and test) the problem of pool exhaustion.
+
+### Rust version
+
+This project was developed and tested with rust `1.64.0`.
+More recent versions of rust will be supported in the future.
