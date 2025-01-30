@@ -1,0 +1,38 @@
+on:
+  pull_request:
+  push:
+
+jobs:
+  test:
+    name: for rust ${{matrix.rust-version}} 
+    strategy:
+      fail-fast: true
+      matrix:
+        rust-version: [1.64.0]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{matrix.rust-version}}
+          components: rustfmt, clippy
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cargo cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check Format
+        run: cargo fmt --all --check
+
+      - name: Clippy 
+        uses: actions-rs-plus/clippy-check@v2.1.1
+        with:
+          args: --all-features
+
+      - name: Build
+        run: cargo build
+
+      - name: Test
+        run: cargo test
