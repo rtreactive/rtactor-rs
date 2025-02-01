@@ -2,13 +2,14 @@
 name = "rtactor"
 version = "0.5.0"
 edition = "2021"
-rust-version = "1.64"
 license = "MIT"
 description = "An Actor framework specially designed for Real-Time constrained use cases."
 readme = "README.md"
+repository = "https://github.com/rtreactive/rtactor-rs"
+rust-version = "1.64"
 
 [dependencies]
-rtactor-macros = { path = "rtactor-macros" }
+rtactor-macros = { version="0.5.0", path = "rtactor-macros" }
 mockall = {version = "0.11.3", optional = true}
 
 [dev-dependencies]

@@ -4,7 +4,8 @@ version = "0.5.0"
 edition = "2021"
 license = "MIT"
 description = "Proc macro crate for the rtactor real-time actor framework."
-readme = "../README.md"
+readme = "README.md"
+repository = "https://github.com/rtreactive/rtactor-rs"
 
 [lib]
 proc-macro = true
