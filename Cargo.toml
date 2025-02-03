@@ -7,6 +7,8 @@ description = "An Actor framework specially designed for Real-Time constrained u
 readme = "README.md"
 repository = "https://github.com/rtreactive/rtactor-rs"
 rust-version = "1.64"
+categories = ["asynchronous", "concurrency", "embedded"]
+keywords = ["real-time", "actor", "framework", "async"]
 
 [dependencies]
 rtactor-macros = { version="0.5.0", path = "rtactor-macros" }
