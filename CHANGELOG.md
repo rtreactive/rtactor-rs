@@ -7,17 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-02-03
+
 ### Added
 
-- published to [crates.io](https://crates.io)
 - add minimum supported rust version (1.64)
-- adapt README.md and Cargo.toml to the rtactor being at the root of the repository
+- adapt README.md and Cargo.toml to rtactor being at the root of the repository
+- add categories and keywords to Cargo.toml
+- add CI workflows for build and release
+- published to [crates.io](https://crates.io)
 
-## [0.4.0] - 2021-08-01
+### Fixed
+
+- fix a test that would sometime fail due to timing issues between threads
+
+## [0.4.0] - 2025-03-25
 
 ### Added
 
 - Placeholders published to [crates.io](https://crates.io)
 
-[unreleased]: https://github.com/rtreactive/rtactor-rs/compare/0.4.0...HEAD
+[unreleased]: https://github.com/rtreactive/rtactor-rs/compare/0.5.0...HEAD
+[0.5.0]: https://github.com/rtreactive/rtactor-rs/releases/tag/0.5.0
 [0.4.0]: https://github.com/rtreactive/rtactor-rs/releases/tag/0.4.0
