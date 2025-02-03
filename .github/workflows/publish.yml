@@ -15,7 +15,7 @@ on:
 jobs:
   checks:
     name: Pre-publish checks
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
         version: ${{ steps.expected-version.outputs.expected_version }}
     steps:
@@ -67,7 +67,7 @@ jobs:
   
   publish-macros:
     name: Publish rtactor-macros
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: checks
     steps:
       - name: Install toolchain
@@ -94,7 +94,7 @@ jobs:
 
   wait:
     name: Wait for it to be available 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [checks, publish-macros]
     steps:
       - name: Install toolchain
@@ -122,7 +122,7 @@ jobs:
     
   publish-rtactor:
     name: Publish rtactor
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [checks, publish-macros, wait]
     steps:
       - name: Install toolchain

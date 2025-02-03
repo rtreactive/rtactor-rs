@@ -9,7 +9,7 @@ jobs:
       fail-fast: true
       matrix:
         rust-version: [1.64.0]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@master
