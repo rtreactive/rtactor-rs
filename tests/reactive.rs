@@ -104,7 +104,7 @@ fn start_stop_dispatcher_accessor() {
 fn reactive_countdown(#[values(false, true)] replace_behavior: bool) {
     let builder = rt::mpsc_dispatcher::Builder::new(10);
     let mut disp_accessor = builder.to_accessor();
-    std::thread::spawn(move || builder.build().process());
+    let join_handle = std::thread::spawn(move || builder.build().process());
 
     let reactive = CountdownReactive::new(&disp_accessor.dispatcher_addr());
     let reactive_addr = if replace_behavior {
@@ -117,9 +117,21 @@ fn reactive_countdown(#[values(false, true)] replace_behavior: bool) {
 
     rtactor::send_notification(&reactive_addr, Notification::Start(3)).unwrap();
 
-    disp_accessor
+    // Wait that the thread is terminated by the actor.
+    join_handle.join().unwrap();
+
+    // The actor and the dispatcher should stop to be reachable.
+    match send_notification(&reactive_addr, Notification::Start(3)).unwrap_err() {
+        rt::Error::AddrUnreachable => {}
+        e => panic!("expect AddrUnreachable, not a {e:?}"),
+    };
+    match disp_accessor
         .stop_dispatcher(Duration::from_secs(100))
-        .unwrap();
+        .unwrap_err()
+    {
+        rt::Error::AddrUnreachable => {}
+        e => panic!("expect AddrUnreachable, not a {e:?}"),
+    };
 }
 
 #[test]
@@ -335,7 +347,7 @@ fn multithread_stress_test() {
                 Request::TestRequest(val) => {
                     // Receive a request and respond to it.
                     match self.receiving_exchange_confs.get_mut(&request.src) {
-                        Some(mut conf) => {
+                        Some(conf) => {
                             assert_eq!(*val, conf.prng.rand_u32());
                             context.send_response(
                                 request,
