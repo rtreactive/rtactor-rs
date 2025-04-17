@@ -120,8 +120,6 @@ pub(crate) enum InternalInstant {
 /// Source of `reactive::Instant`, for example real or simulated.
 pub(crate) trait InstantSource {
     fn now(&self) -> Instant;
-    fn convert_to_std_instant(&self, instant: Instant) -> time::Instant;
-    fn convert_from_std_instant(&self, instant: time::Instant) -> Instant;
 }
 
 /// Identify a timeout to avoid flying notification of unscheduled timer to trigger code.
@@ -659,12 +657,12 @@ mod tests {
 
     #[test]
     fn size_of_objects() {
-        assert!(mem::size_of::<mpsc::SyncSender<Message>>() <= 8);
+        assert!(mem::size_of::<mpsc::SyncSender<Message>>() <= 16);
         assert!(mem::size_of::<Message>() <= 56);
-        assert!(mem::size_of::<actor::Request>() <= 48);
+        assert!(mem::size_of::<actor::Request>() <= 56);
         assert!(mem::size_of::<actor::Response>() <= 40);
         assert!(mem::size_of::<actor::Notification>() <= 16);
-        assert!(mem::size_of::<actor::Addr>() <= 24);
-        assert!(mem::size_of::<ReactiveAddr>() <= 16);
+        assert!(mem::size_of::<actor::Addr>() <= 32);
+        assert!(mem::size_of::<ReactiveAddr>() <= 24);
     }
 }

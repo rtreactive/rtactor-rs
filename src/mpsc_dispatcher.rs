@@ -381,17 +381,6 @@ impl InstantSource for StdTimeInstantSource {
     fn now(&self) -> Instant {
         InternalInstant::Finite(time::Instant::now()).into_instant()
     }
-    fn convert_to_std_instant(&self, instant: Instant) -> time::Instant {
-        match instant.internal() {
-            InternalInstant::Finite(internal) => *internal,
-            InternalInstant::Infinity => {
-                panic!()
-            } // TODO right way ?
-        }
-    }
-    fn convert_from_std_instant(&self, instant: time::Instant) -> Instant {
-        InternalInstant::Finite(instant).into_instant()
-    }
 }
 
 ////////////////////////////// tests /////////////////////////////////////

@@ -413,14 +413,4 @@ impl reactive::InstantSource for SimulatedInstantSource {
     fn now(&self) -> reactive::Instant {
         self.now()
     }
-    fn convert_to_std_instant(&self, _instant: reactive::Instant) -> time::Instant {
-        panic!(
-            "convertion from reactive::Instant -> std::time::Instant is not possible in simulation"
-        )
-    }
-    fn convert_from_std_instant(&self, _instant: time::Instant) -> reactive::Instant {
-        panic!(
-            "convertion from std::time::Instant -> reactive::Instant is not possible in simulation"
-        )
-    }
 }
