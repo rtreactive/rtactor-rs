@@ -1,6 +1,6 @@
 [package]
 name = "rtactor"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 license = "MIT"
 description = "An Actor framework specially designed for Real-Time constrained use cases."
@@ -12,14 +12,14 @@ keywords = ["real-time", "actor", "framework", "async"]
 
 [dependencies]
 rtactor-macros = { version="0.5.0", path = "rtactor-macros" }
-mockall = {version = "0.11.3", optional = true}
+mockall = {version = ">= 0.11, <= 0.13", optional = true}
 
 [dev-dependencies]
 oorandom = "11" # rand crate is way to big, complex and difficult to port to MCU
-assert2 = "=0.3.6"
+assert2 = "0.3"
 panic-context = "0.1"
 log = "0.4"
-env_logger = "0.9"
-mockall= "0.11"
-rstest = "0.15"
+env_logger = ">= 0.9, <= 0.11"
+mockall= ">= 0.11, <= 0.13"
+rstest = ">=0.15, <= 0.25"
 approx = "0.5"
