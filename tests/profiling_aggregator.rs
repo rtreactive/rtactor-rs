@@ -277,13 +277,11 @@ mod with_mockall {
                         assert_eq!(names_metric_lists.len(), 3);
                         assert_eq!(context.now().saturating_sub(timestamp).as_micros(), 0);
 
-                        let mut j = 0;
-                        for (name, list) in names_metric_lists {
+                        for (j, (name, list)) in names_metric_lists.iter().enumerate() {
                             assert_eq!(*name, format!("loop{}_profiled{}", i_for_observer, j));
                             assert_eq!(list.len(), 1);
                             assert_eq!(list[0].name, "val_avg");
                             assert_eq!(list[0].value, 23.4);
-                            j += 1;
                         }
                     });
             }

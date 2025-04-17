@@ -166,10 +166,7 @@ impl MpscDispatcher {
             .reactive_list
             .binary_search_by_key(&id, |element| element.0);
 
-        match result {
-            Ok(index) => Some(index),
-            Err(_) => None,
-        }
+        result.ok()
     }
 
     fn drop_queued_messages(&mut self) {
@@ -244,9 +241,9 @@ impl MpscDispatcher {
     /// Process a single message.
     ///
     /// Return if stop is requested.
-    fn process_current_message<'a>(
+    fn process_current_message(
         &mut self,
-        context: &mut ProcessContext<'a>,
+        context: &mut ProcessContext,
         message_and_id: MessageAndDstId,
     ) -> bool {
         if message_and_id.dst_id == self.disp_actor_id {
@@ -276,10 +273,7 @@ impl MpscDispatcher {
     /// Try to extract a message from the queue and process it if needed.
     ///
     /// Return if the message was processed and if stop asked.
-    pub(crate) fn try_process_message<'a>(
-        &mut self,
-        context: &'a mut ProcessContext<'_>,
-    ) -> (bool, bool) {
+    pub(crate) fn try_process_message(&mut self, context: &mut ProcessContext) -> (bool, bool) {
         match self.rx.try_recv() {
             Ok(message_and_id) => (true, self.process_current_message(context, message_and_id)),
             Err(mpsc::TryRecvError::Empty) => (false, false),
@@ -290,9 +284,9 @@ impl MpscDispatcher {
     /// Block on the queue for a message and process it if needed.
     ///
     /// Return if the message was processed and if stop asked.
-    pub(crate) fn block_process_message<'a>(
+    pub(crate) fn block_process_message(
         &mut self,
-        context: &'a mut ProcessContext<'_>,
+        context: &mut ProcessContext,
         timeout: Duration,
     ) -> (bool, bool) {
         match self.rx.recv_timeout(timeout) {
@@ -395,15 +389,12 @@ mod tests {
 
     impl Behavior for TestBehavior {
         fn process_message(&mut self, _context: &mut ProcessContext, msg: &Message) {
-            match msg {
-                Message::Notification(notif) => {
-                    if let Some(&float) = notif.data.downcast_ref::<f32>() {
-                        assert!(float == 3.4);
-                    } else if let Some(&int) = notif.data.downcast_ref::<i32>() {
-                        assert!(int == -567);
-                    }
+            if let Message::Notification(notif) = msg {
+                if let Some(&float) = notif.data.downcast_ref::<f32>() {
+                    assert!(float == 3.4);
+                } else if let Some(&int) = notif.data.downcast_ref::<i32>() {
+                    assert!(int == -567);
                 }
-                _ => (),
             }
         }
     }
@@ -421,7 +412,7 @@ mod tests {
                     .unregister_reactive_by_id(reactive_addr.dst_id)
                     .is_some())
             }
-            _ => assert!(false),
+            _ => panic!(),
         }
     }
 
@@ -431,8 +422,7 @@ mod tests {
 
         let instant_source = StdTimeInstantSource();
         let mut timeout_scheduler = TimeoutScheduler::new();
-        let mut context =
-            ProcessContext::new(&mut disp, 0, &instant_source, &mut timeout_scheduler);
+        let mut context = ProcessContext::new(&disp, 0, &instant_source, &mut timeout_scheduler);
 
         let behavior = Box::new(TestBehavior());
 

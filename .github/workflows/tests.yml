@@ -27,7 +27,10 @@ jobs:
 
       # Build not for the latest version use a different lock file.
       - name: Replace Cargo.lock for a specific version
-        run: test -f Cargo.lock-${TOOLCHAIN_RUST_VERSION} && cp -v Cargo.lock-${TOOLCHAIN_RUST_VERSION} Cargo.lock
+        run: |
+          if [ -f Cargo.lock-${TOOLCHAIN_RUST_VERSION} ]; then
+            cp -v Cargo.lock-${TOOLCHAIN_RUST_VERSION} Cargo.lock
+          fi
 
       - name: Check Format
         run: cargo fmt --all --check

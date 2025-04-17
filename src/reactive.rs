@@ -34,7 +34,8 @@ use std::time::Duration;
 /// data, etc.
 #[cfg_attr(feature = "mockall", mockall::automock)]
 pub trait Behavior {
-    fn process_message<'a, 'b>(&mut self, context: &'a mut ProcessContext<'b>, msg: &Message);
+    #[allow(clippy::needless_lifetimes)] // false positive (tested with 1.64.0 and 1.86.0)
+    fn process_message<'a>(&mut self, context: &mut ProcessContext<'a>, msg: &Message);
 }
 
 /// An way to interact with the dispatcher that is only valid during `Behavior::process_message()`.
@@ -92,7 +93,7 @@ pub struct Timer {
 pub struct DummyBehavior();
 
 impl Behavior for DummyBehavior {
-    fn process_message<'a, 'b>(&mut self, _context: &'a mut ProcessContext<'b>, _msg: &Message) {}
+    fn process_message(&mut self, _context: &mut ProcessContext, _msg: &Message) {}
 }
 
 ////////////////////////////// internal types /////////////////////////////////////

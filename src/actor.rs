@@ -181,7 +181,7 @@ impl Addr {
         }
     }
 
-    pub(crate) fn receive_request<T: 'static>(&self, src: &Addr, id: RequestId, data: T)
+    pub(crate) fn receive_request<T>(&self, src: &Addr, id: RequestId, data: T)
     where
         T: 'static + Send,
     {

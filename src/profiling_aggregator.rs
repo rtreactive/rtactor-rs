@@ -98,11 +98,7 @@ impl Default for ProfilingAggregator {
 }
 
 impl rt::Behavior for ProfilingAggregator {
-    fn process_message<'a, 'b>(
-        &mut self,
-        context: &'a mut rt::ProcessContext<'b>,
-        msg: &rt::Message,
-    ) {
+    fn process_message(&mut self, context: &mut rt::ProcessContext, msg: &rt::Message) {
         match msg {
             rt::Message::Request(request) => self.process_request(context, request),
             rt::Message::Response(response) => self.process_response(context, response),
@@ -160,11 +156,7 @@ impl ProfilingAggregator {
         }
     }
 
-    fn process_request<'a, 'b>(
-        &mut self,
-        context: &'a mut rt::ProcessContext<'b>,
-        request: &rt::Request,
-    ) {
+    fn process_request(&mut self, context: &mut rt::ProcessContext, request: &rt::Request) {
         if let Some(data) = request.data.downcast_ref() {
             match data {
                 Request::RegisterObserver { addr } => {
@@ -201,7 +193,7 @@ impl ProfilingAggregator {
         }
     }
 
-    fn process_next_snapshot_and_notify<'a>(&mut self, context: &'a mut rt::ProcessContext<'_>) {
+    fn process_next_snapshot_and_notify(&mut self, context: &mut rt::ProcessContext) {
         let mut list_and_timestamp_to_notify = None;
 
         match &mut self.state {
@@ -249,11 +241,7 @@ impl ProfilingAggregator {
         }
     }
 
-    fn process_response<'a, 'b>(
-        &mut self,
-        context: &'a mut rt::ProcessContext<'b>,
-        response: &rt::Response,
-    ) {
+    fn process_response(&mut self, context: &mut rt::ProcessContext, response: &rt::Response) {
         if let State::Processing {
             snapshot_list,
             requested_index,
@@ -296,9 +284,9 @@ impl ProfilingAggregator {
         }
     }
 
-    fn notify_observers<'a, 'b>(
+    fn notify_observers(
         &mut self,
-        context: &'a mut rt::ProcessContext<'b>,
+        context: &mut rt::ProcessContext,
         names: &Vec<String>,
         timestamp: &rt::Instant,
     ) {
@@ -325,9 +313,9 @@ impl ProfilingAggregator {
         }
     }
 
-    fn process_notification<'a, 'b>(
+    fn process_notification(
         &mut self,
-        context: &'a mut rt::ProcessContext<'b>,
+        context: &mut rt::ProcessContext,
         notification: &rt::Notification,
     ) {
         if let Some(data) = notification.data.downcast_ref() {

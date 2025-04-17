@@ -134,11 +134,7 @@ impl Client {
 }
 
 impl rt::Behavior for Client {
-    fn process_message<'a, 'b>(
-        &mut self,
-        context: &'a mut rt::ProcessContext<'b>,
-        message: &rt::Message,
-    ) {
+    fn process_message(&mut self, context: &mut rt::ProcessContext, message: &rt::Message) {
         match message {
             rt::Message::Notification(notification) => {
                 if let Some(c) = notification.data.downcast_ref::<char>() {
@@ -170,11 +166,7 @@ impl rt::Behavior for Client {
 struct Server();
 
 impl rt::Behavior for Server {
-    fn process_message<'a, 'b>(
-        &mut self,
-        context: &'a mut rt::ProcessContext<'b>,
-        message: &rt::Message,
-    ) {
+    fn process_message(&mut self, context: &mut rt::ProcessContext, message: &rt::Message) {
         match message {
             rt::Message::Request(request) => {
                 if let Some(str) = request.data.downcast_ref::<String>() {
@@ -242,14 +234,16 @@ synchronous way in the unit tests (more details about this later).
 
 ```rust
 pub mod acceleration_broadcaster {
-    use rtactor::{
+    use rtactor as rt;
+
+    use rt::{
         define_sim_sync_accessor, define_sync_accessor,
         rtactor_macros::{ResponseEnum, SyncNotifier, SyncRequester},
     };
 
     #[derive(ResponseEnum, SyncRequester)]
     pub enum Request {
-        Start { can_controller_addr: rtactor::Addr },
+        Start { can_controller_addr: rt::Addr },
         Stop {},
     }
     #[derive(SyncNotifier)]
@@ -301,9 +295,9 @@ allows the dispatcher to send a notification periodically.
 
 ```rust
 pub mod simple_acceleration_broadcaster {
-    use std::time::Duration;
-
     use rtactor as rt;
+
+    use std::time::Duration;
 
     use crate::{acceleration_broadcaster, can_controller};
 
@@ -314,7 +308,7 @@ pub mod simple_acceleration_broadcaster {
     }
 
     pub struct Broadcaster {
-        can_controller_addr: rtactor::Addr,
+        can_controller_addr: rt::Addr,
         sample_count: u32,
         acceleration_sum: [i32; 3],
         state: State,
@@ -333,14 +327,10 @@ because it provides a method `is_scheduling()` that allows safely checking
 whether the timer `Notification` was expected.
 
 ```rust
-impl rtactor::Behavior for Broadcaster {
-    fn process_message<'a, 'b>(
-        &mut self,
-        context: &'a mut rt::ProcessContext<'b>,
-        msg: &rt::Message,
-    ) {
+impl rt::Behavior for Broadcaster {
+    fn process_message(&mut self, context: &mut rt::ProcessContext, msg: &rt::Message) {
         match msg {
-            rtactor::Message::Request(request) => {
+            rt::Message::Request(request) => {
                 if let Some(req_data) = request.data.downcast_ref() {
                     self.process_broadcaster_request(context, request, req_data);
                 }
@@ -375,9 +365,9 @@ many operations are performed with the `ProcessContext` passed to
 `process_message()`. This helps to keep the `Timer` struct lightweight.
 
 ```rust
-fn process_broadcaster_request<'a, 'b>(
+fn process_broadcaster_request(
     &mut self,
-    context: &'a mut rt::ProcessContext<'b>,
+    context: &mut rt::ProcessContext,
     request: &rt::Request,
     data: &acceleration_broadcaster::Request,
 ) {
@@ -409,12 +399,12 @@ fn process_broadcaster_request<'a, 'b>(
 The reception of the acceleration is very simple and consists of:
 
 ```rust
-fn process_accelerometer_notification<'a, 'b>(
+fn process_accelerometer_notification(
     &mut self,
     data: &acceleration_broadcaster::Notification,
 ) {
     let acceleration_broadcaster::Notification::AccelerationSample { acceleration } = data;
-    for (i, a) in acceleration.into_iter().enumerate() {
+    for (i, a) in acceleration.iter().enumerate() {
         self.acceleration_sum[i] += *a as i32;
     }
     self.sample_count += 1;
@@ -429,7 +419,7 @@ In this implementation, if the CAN bus is too slow (state is still `SendingCanMe
 when the next timer elapses), the CAN message is simply not sent.
 
 ```rust
-fn process_timer_elapsed<'a, 'b>(&mut self, context: &'a mut rt::ProcessContext<'b>) {
+fn process_timer_elapsed(&mut self, context: &mut rt::ProcessContext) {
     if let State::WaitSamples = self.state {
         if self.sample_count > 0 {
             let mut data = [0i16; 4];
@@ -462,7 +452,7 @@ back to `WaitSamples`. As an example, if there is an
 application error, the error is printed to `stdout`.
 
 ```rust
-fn process_can_controller_response<'a, 'b>(
+fn process_can_controller_response(
     &mut self,
     response: &rt::Response,
     data: &can_controller::Response,
@@ -470,7 +460,7 @@ fn process_can_controller_response<'a, 'b>(
     let can_controller::Response::SendMessage(result) = data;
 
     if let State::SendingCanMessage { request_id } = self.state {
-        if response.iq_eq(request_id) {
+        if response.id_eq(request_id) {
             if let Err(error) = result {
                 println!("can error: {error:?}");
             }
@@ -537,9 +527,9 @@ fn test_broadcaster_simulated() {
         .start(fake_can.addr(), Duration::ZERO)
         .unwrap();
 
-    // Make the simulation advance half accelerometer the sampling rate
-    // so it is guaranteed the test bellow. Any queued message is processed in
-    // `process_for` (but in this case none should be).
+    // Make the simulation advance half the accelerometer sampling rate
+    // so the can message is guaranteed to be received in the test bellow.
+    // Any queued message is processed in `process_for` (but in this case none should be).
     disp.borrow_mut().process_for(ACCELEROMETER_T_SAMPLE / 2);
 
     for i in 0..3 {
@@ -559,7 +549,7 @@ fn test_broadcaster_simulated() {
         // It is very important to use the method `active_wait_message*` of the dispatcher
         // when working with active actors. This insures processing of the queued messages
         // in the dispatcher and use of the simulated time. It's not the case if
-        // `ActiveActor::wait_message*` are used.
+        // `ActiveActor::wait_message*` methods of `ActiveActor` are used.
         let msg = disp
             .borrow_mut()
             .active_wait_message_for(&mut fake_can, Duration::ZERO)
@@ -680,5 +670,5 @@ allocated from a memory pool, is a possible solution to have to only handle
 
 ### Rust version
 
-This project was developed and tested with rust `1.64.0`.
-More recent versions of rust will be supported in the future.
+This project was tested with rust `1.64.0` and rust `1.86.0`.
+Version in between were not tested but should work.

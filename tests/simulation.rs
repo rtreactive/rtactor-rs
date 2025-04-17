@@ -43,7 +43,7 @@ fn simple_simulation_dispatcher() {
     }
 
     impl Behavior for TestReactive {
-        fn process_message<'a>(&mut self, context: &'a mut ProcessContext, msg: &Message) {
+        fn process_message(&mut self, context: &mut ProcessContext, msg: &Message) {
             match msg {
                 Message::Notification(notif) => {
                     if let Some(notif) = notif.data.downcast_ref::<Notification>() {
@@ -60,7 +60,7 @@ fn simple_simulation_dispatcher() {
                             }
 
                             Request::ToString(label) => context.send_response(
-                                &request,
+                                request,
                                 Response::ToString(format!("{label}: {}", self.val)),
                             ),
                         }
@@ -143,7 +143,7 @@ fn timer_test() {
         }
     }
     impl Behavior for Tester {
-        fn process_message<'a>(&mut self, context: &'a mut ProcessContext, msg: &Message) {
+        fn process_message(&mut self, context: &mut ProcessContext, msg: &Message) {
             match msg {
                 Message::Request(_) => panic!(),
                 Message::Response(_) => panic!(),

@@ -7,7 +7,6 @@ use rt::profiled_actor::{
 };
 use std::{
     cell::{Cell, RefCell},
-    f64::{INFINITY, NAN},
     time::Duration,
 };
 
@@ -20,7 +19,7 @@ fn test_min_metric() {
     metric.snapshot_in(&mut list);
 
     let_assert!(Some(entry) = list.pop());
-    assert_eq!(entry.value, INFINITY);
+    assert_eq!(entry.value, f64::INFINITY);
     assert_eq!(entry.name, "min_buf_level");
 
     metric.records(1.0);
@@ -33,11 +32,11 @@ fn test_min_metric() {
     metric.snapshot_in(&mut list);
 
     let_assert!(Some(entry) = list.pop());
-    assert_eq!(entry.value, INFINITY);
+    assert_eq!(entry.value, f64::INFINITY);
     assert_eq!(entry.name, "min_buf_level");
 
     metric.records(-3.);
-    metric.records(NAN);
+    metric.records(f64::NAN);
     metric.records(-7.5);
     metric.snapshot_in(&mut list);
 
@@ -55,7 +54,7 @@ fn test_max_metric() {
     metric.snapshot_in(&mut list);
 
     let_assert!(Some(entry) = list.pop());
-    assert_eq!(entry.value, -INFINITY);
+    assert_eq!(entry.value, -f64::INFINITY);
     assert_eq!(entry.name, "max_buf_level");
 
     metric.records(3e6);
@@ -68,11 +67,11 @@ fn test_max_metric() {
     metric.snapshot_in(&mut list);
 
     let_assert!(Some(entry) = list.pop());
-    assert_eq!(entry.value, -INFINITY);
+    assert_eq!(entry.value, -f64::INFINITY);
     assert_eq!(entry.name, "max_buf_level");
 
     metric.records(34.);
-    metric.records(NAN);
+    metric.records(f64::NAN);
     metric.records(5.);
     metric.snapshot_in(&mut list);
 
@@ -166,11 +165,7 @@ fn test_take_duration() {
     }
 
     impl rt::Behavior for Reactive {
-        fn process_message<'a, 'b>(
-            &mut self,
-            context: &'a mut rt::ProcessContext<'b>,
-            msg: &rt::Message,
-        ) {
+        fn process_message(&mut self, context: &mut rt::ProcessContext, msg: &rt::Message) {
             match msg {
                 rt::Message::Request(request) => assert!(profiled_actor::try_process_request(
                     context,

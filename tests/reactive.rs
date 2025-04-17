@@ -106,7 +106,7 @@ fn reactive_countdown(#[values(false, true)] replace_behavior: bool) {
     let mut disp_accessor = builder.to_accessor();
     let join_handle = std::thread::spawn(move || builder.build().process());
 
-    let reactive = CountdownReactive::new(&disp_accessor.dispatcher_addr());
+    let reactive = CountdownReactive::new(disp_accessor.dispatcher_addr());
     let reactive_addr = if replace_behavior {
         let addr = disp_accessor.register_reactive_unwrap(rt::DummyBehavior::default());
         disp_accessor.replace_reactive_unwrap(&addr, reactive);
@@ -159,7 +159,7 @@ fn simple_threaded_dispatcher() {
     }
 
     impl Behavior for TestReactive {
-        fn process_message<'a>(&mut self, context: &'a mut ProcessContext, msg: &Message) {
+        fn process_message(&mut self, context: &mut ProcessContext, msg: &Message) {
             match msg {
                 Message::Notification(notif) => {
                     if let Some(notif) = notif.data.downcast_ref::<Notification>() {
@@ -176,7 +176,7 @@ fn simple_threaded_dispatcher() {
                             }
 
                             Request::ToString(label) => context.send_response(
-                                &request,
+                                request,
                                 Response::ToString(format!("{label}: {}", self.val)),
                             ),
                         }
@@ -279,18 +279,18 @@ fn multithread_stress_test() {
     enum Request {
         AddEmittingExchangeConf(ExchangeConf),
         AddReceivingExchangeConf(ExchangeConf),
-        TestRequest(u32 /*random data*/),
+        TestReq(u32 /*random data*/),
     }
 
     enum Response {
         AddEmittingExchangeConf(),
         AddReceivingExchangeConf(),
-        TestRequest((Addr /* source */, u32 /* random data */)),
+        TestReq((Addr /* source */, u32 /* random data */)),
     }
 
     enum Notification {
         StartTest(Addr /*termination observer*/),
-        TestNotification((Addr /* source */, u32 /* random data */)),
+        TestNotif((Addr /* source */, u32 /* random data */)),
         ProcessNext(),
         ExchangesCompleted(),
     }
@@ -310,11 +310,7 @@ fn multithread_stress_test() {
     }
 
     impl StressTester {
-        fn process_request<'a>(
-            &mut self,
-            context: &'a mut ProcessContext,
-            request: &rtactor::Request,
-        ) {
+        fn process_request(&mut self, context: &mut ProcessContext, request: &rtactor::Request) {
             match request.data.downcast_ref::<Request>().unwrap() {
                 Request::AddEmittingExchangeConf(add_conf) => {
                     match self
@@ -344,14 +340,14 @@ fn multithread_stress_test() {
                     };
                     context.send_response(request, Response::AddReceivingExchangeConf());
                 }
-                Request::TestRequest(val) => {
+                Request::TestReq(val) => {
                     // Receive a request and respond to it.
                     match self.receiving_exchange_confs.get_mut(&request.src) {
                         Some(conf) => {
                             assert_eq!(*val, conf.prng.rand_u32());
                             context.send_response(
                                 request,
-                                Response::TestRequest((context.own_addr(), conf.prng.rand_u32())),
+                                Response::TestReq((context.own_addr(), conf.prng.rand_u32())),
                             );
                             conf.count -= 1;
                             if conf.count == 0 {
@@ -375,16 +371,16 @@ fn multithread_stress_test() {
             }
         }
 
-        fn process_notification<'a>(
+        fn process_notification(
             &mut self,
-            context: &'a mut ProcessContext,
+            context: &mut ProcessContext,
             notif: &rtactor::Notification,
         ) {
             match notif.data.downcast_ref::<Notification>().unwrap() {
                 Notification::StartTest(termination_observer) => {
                     self.termination_observer = termination_observer.clone();
 
-                    if self.emitting_exchange_confs.len() > 0 {
+                    if !self.emitting_exchange_confs.is_empty() {
                         context
                             .send_self_notification(Notification::ProcessNext())
                             .unwrap();
@@ -397,7 +393,7 @@ fn multithread_stress_test() {
                             .unwrap();
                     }
                 }
-                Notification::TestNotification((src, val)) => {
+                Notification::TestNotif((src, val)) => {
                     // Receive a test notification and do the checks.
                     let conf = self.receiving_exchange_confs.get_mut(src).unwrap();
 
@@ -426,7 +422,7 @@ fn multithread_stress_test() {
                     if self.prng.rand_u32() % 2 == 0 {
                         // Send a Request.
                         self.expected_request_id = context
-                            .send_request(&conf.peer, Request::TestRequest(conf.prng.rand_u32()));
+                            .send_request(&conf.peer, Request::TestReq(conf.prng.rand_u32()));
                         self.expected_response_u32 = conf.prng.rand_u32();
                         self.expected_response_src = conf.peer.clone();
 
@@ -441,10 +437,7 @@ fn multithread_stress_test() {
                         context
                             .send_notification(
                                 &conf.peer,
-                                Notification::TestNotification((
-                                    context.own_addr(),
-                                    conf.prng.rand_u32(),
-                                )),
+                                Notification::TestNotif((context.own_addr(), conf.prng.rand_u32())),
                             )
                             .unwrap();
 
@@ -466,12 +459,12 @@ fn multithread_stress_test() {
     }
 
     impl Behavior for StressTester {
-        fn process_message<'a>(&mut self, context: &'a mut ProcessContext, msg: &Message) {
+        fn process_message(&mut self, context: &mut ProcessContext, msg: &Message) {
             match msg {
                 Message::Request(request) => self.process_request(context, request),
                 Message::Response(response) => match &response.result {
                     Ok(data) => match data.downcast_ref::<Response>().unwrap() {
-                        Response::TestRequest((src, val)) => {
+                        Response::TestReq((src, val)) => {
                             assert!(*src == self.expected_response_src);
                             assert!(*val == self.expected_response_u32);
                             assert!(response.request_id == self.expected_request_id);
@@ -572,7 +565,7 @@ fn multithread_stress_test() {
 
     // Start the reactives operations.
     for reactive in &all_reactive_addrs {
-        send_notification(&reactive, Notification::StartTest(ordonnancer.addr())).unwrap();
+        send_notification(reactive, Notification::StartTest(ordonnancer.addr())).unwrap();
     }
 
     // Wait for the reactives to finish the operations.
@@ -590,16 +583,16 @@ fn multithread_stress_test() {
 
     // Request all dispatchers to stop.
     for disp_addr in &disp_addrs {
-        match ordonnancer
+        if let dispatcher::Response::StopDispatcher() = ordonnancer
             .request_for(
-                &disp_addr,
+                disp_addr,
                 dispatcher::Request::StopDispatcher {},
                 TEST_TIMEOUT,
             )
             .unwrap()
         {
-            dispatcher::Response::StopDispatcher() => (),
-            _ => (),
+        } else {
+            panic!();
         }
     }
 
@@ -634,7 +627,7 @@ fn timer_test() {
         }
     }
     impl Behavior for Tester {
-        fn process_message<'a>(&mut self, context: &'a mut ProcessContext, msg: &Message) {
+        fn process_message(&mut self, context: &mut ProcessContext, msg: &Message) {
             match msg {
                 Message::Request(_) => panic!(),
                 Message::Response(_) => panic!(),
@@ -720,7 +713,7 @@ fn timer_test() {
         }
     }
     let mut observer = ActiveActor::new(1);
-    let observer_addr = observer.addr().clone();
+    let observer_addr = observer.addr();
 
     // Start a dispatcher inside its own thread.
     // The active object is created with the closure called inside the dispatcher thread.
@@ -735,7 +728,6 @@ fn timer_test() {
             Notification::Start(),
         )
         .unwrap();
-        ()
     });
 
     let_assert!(Ok(Message::Notification(notif)) = observer.wait_message_for(TEST_TIMEOUT));
@@ -763,7 +755,7 @@ fn test_sync_access() {
             .execute_fn(
                 |_disp| {
                     assert!(_disp.addr().is_valid());
-                    456 as i32
+                    456_i32
                 },
                 TEST_TIMEOUT,
             )

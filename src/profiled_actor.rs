@@ -1,9 +1,11 @@
+//! An interface for actor profiled by profiling_aggregator and the corresponding Metrics struct.
+//!
+//! Different Metric can be used and are interchangeable.
+//!
+//! Use try_process_request() to implement profiled_actor in your Behavior.
+
 use crate as rt;
-///! An interface for actor profiled by profiling_aggregator and the corresponding Metrics struct.
-///!
-///! Different Metric can be used and are interchangeable.
-///!
-///! Use try_process_request() to implement profiled_actor in your Behavior.
+
 use rt::{
     define_sim_sync_accessor, define_sync_accessor,
     rtactor_macros::{ResponseEnum, SyncRequester},
@@ -70,11 +72,7 @@ pub trait Metric {
     }
 
     /// Record a duration, take_begin_instant() should be used for begin_instant.
-    fn records_duration<'a>(
-        &mut self,
-        context: &'a rt::ProcessContext<'_>,
-        begin_instant: rt::Instant,
-    ) {
+    fn records_duration(&mut self, context: &rt::ProcessContext, begin_instant: rt::Instant) {
         self.records(context.now().saturating_sub(&begin_instant).as_secs_f64())
     }
 }

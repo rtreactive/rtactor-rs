@@ -17,11 +17,7 @@ impl Client {
 }
 
 impl rt::Behavior for Client {
-    fn process_message<'a, 'b>(
-        &mut self,
-        context: &'a mut rt::ProcessContext<'b>,
-        message: &rt::Message,
-    ) {
+    fn process_message(&mut self, context: &mut rt::ProcessContext, message: &rt::Message) {
         match message {
             rt::Message::Notification(notification) => {
                 if let Some(c) = notification.data.downcast_ref::<char>() {
@@ -53,11 +49,7 @@ impl rt::Behavior for Client {
 struct Server();
 
 impl rt::Behavior for Server {
-    fn process_message<'a, 'b>(
-        &mut self,
-        context: &'a mut rt::ProcessContext<'b>,
-        message: &rt::Message,
-    ) {
+    fn process_message(&mut self, context: &mut rt::ProcessContext, message: &rt::Message) {
         match message {
             rt::Message::Request(request) => {
                 if let Some(str) = request.data.downcast_ref::<String>() {
