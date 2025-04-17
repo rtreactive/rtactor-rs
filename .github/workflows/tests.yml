@@ -38,10 +38,14 @@ jobs:
       - name: Clippy 
         uses: actions-rs-plus/clippy-check@v2.1.1
         with:
-          args: --all-features
+          args: --all-features --all-targets
 
       - name: Build
         run: cargo build
 
-      - name: Test
+      - name: Test with default features
         run: cargo test
+      
+      - name: Test with all features
+        run: cargo test --all-features
+
