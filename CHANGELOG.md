@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-04-18
+
+### Changed
+
+- add build/CI support for rust 1.86.0
+
+### Fixed
+
+- fixed some warnings
+
 ## [0.5.0] - 2025-02-03
 
 ### Added
@@ -27,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Placeholders published to [crates.io](https://crates.io)
 
-[unreleased]: https://github.com/rtreactive/rtactor-rs/compare/0.5.0...HEAD
+[unreleased]: https://github.com/rtreactive/rtactor-rs/compare/0.5.1...HEAD
+[0.5.1]: https://github.com/rtreactive/rtactor-rs/releases/tag/0.5.1
 [0.5.0]: https://github.com/rtreactive/rtactor-rs/releases/tag/0.5.0
 [0.4.0]: https://github.com/rtreactive/rtactor-rs/releases/tag/0.4.0
