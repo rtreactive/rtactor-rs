@@ -72,15 +72,16 @@ mod has_mockall {
 
         mocker.mock().checkpoint();
 
-        mocker.mock().expect_process_notification().returning(
-            |mut data, _context, notification| {
+        mocker
+            .mock()
+            .expect_process_notification()
+            .returning(|data, _context, notification| {
                 let_assert!(
                     Some(Notification::NotifyAnI32 { i }) = notification.data.downcast_ref()
                 );
                 assert_eq!(*i, 678);
                 data.a_data = 67.3;
-            },
-        );
+            });
 
         rt::send_notification(&mocker.addr(), Notification::NotifyAnI32 { i: 678 }).unwrap();
 

@@ -27,23 +27,24 @@ pub struct ReactiveMocker<T: 'static> {
 
 /// A mockall reactive mock that split process_message() and add data as argument.
 #[mockall::automock]
+#[allow(clippy::needless_lifetimes)] // false positive (tested with 1.64.0 and 1.86.0)
 pub trait Reactive<T> {
-    fn process_request<'a, 'b>(
+    fn process_request<'a>(
         &mut self,
-        mock_data: &'a mut T,
-        context: &'a mut ProcessContext<'b>,
+        mock_data: &mut T,
+        context: &mut ProcessContext<'a>,
         request: &crate::Request,
     );
-    fn process_response<'a, 'b>(
+    fn process_response<'a>(
         &mut self,
-        mock_data: &'a mut T,
-        context: &'a mut ProcessContext<'b>,
+        mock_data: &mut T,
+        context: &mut ProcessContext<'a>,
         response: &crate::Response,
     );
-    fn process_notification<'a, 'b>(
+    fn process_notification<'a>(
         &mut self,
-        mock_data: &'a mut T,
-        context: &'a mut ProcessContext<'b>,
+        mock_data: &mut T,
+        context: &mut ProcessContext<'a>,
         request: &crate::Notification,
     );
 }
@@ -91,7 +92,7 @@ impl<T> ReactiveMocker<T> {
 }
 
 impl<T> Behavior for ReactiveMocker<T> {
-    fn process_message<'a, 'b>(&mut self, context: &'a mut ProcessContext<'b>, msg: &Message) {
+    fn process_message(&mut self, context: &mut ProcessContext, msg: &Message) {
         let data = &mut *self.data.lock().unwrap();
 
         let mut mock = self.mock.lock().unwrap();

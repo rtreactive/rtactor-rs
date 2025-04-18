@@ -34,7 +34,8 @@ use std::time::Duration;
 /// data, etc.
 #[cfg_attr(feature = "mockall", mockall::automock)]
 pub trait Behavior {
-    fn process_message<'a, 'b>(&mut self, context: &'a mut ProcessContext<'b>, msg: &Message);
+    #[allow(clippy::needless_lifetimes)] // false positive (tested with 1.64.0 and 1.86.0)
+    fn process_message<'a>(&mut self, context: &mut ProcessContext<'a>, msg: &Message);
 }
 
 /// An way to interact with the dispatcher that is only valid during `Behavior::process_message()`.
@@ -92,7 +93,7 @@ pub struct Timer {
 pub struct DummyBehavior();
 
 impl Behavior for DummyBehavior {
-    fn process_message<'a, 'b>(&mut self, _context: &'a mut ProcessContext<'b>, _msg: &Message) {}
+    fn process_message(&mut self, _context: &mut ProcessContext, _msg: &Message) {}
 }
 
 ////////////////////////////// internal types /////////////////////////////////////
@@ -120,8 +121,6 @@ pub(crate) enum InternalInstant {
 /// Source of `reactive::Instant`, for example real or simulated.
 pub(crate) trait InstantSource {
     fn now(&self) -> Instant;
-    fn convert_to_std_instant(&self, instant: Instant) -> time::Instant;
-    fn convert_from_std_instant(&self, instant: time::Instant) -> Instant;
 }
 
 /// Identify a timeout to avoid flying notification of unscheduled timer to trigger code.
@@ -632,11 +631,7 @@ impl std::cmp::Ord for Timer {
 
 impl std::cmp::PartialOrd for Timer {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self.deadline.partial_cmp(&other.deadline) {
-            Some(core::cmp::Ordering::Equal) => {}
-            ord => return ord,
-        }
-        self.id.partial_cmp(&other.id)
+        Some(self.cmp(other))
     }
 }
 
@@ -659,12 +654,91 @@ mod tests {
 
     #[test]
     fn size_of_objects() {
-        assert!(mem::size_of::<mpsc::SyncSender<Message>>() <= 8);
+        assert!(mem::size_of::<mpsc::SyncSender<Message>>() <= 16);
         assert!(mem::size_of::<Message>() <= 56);
-        assert!(mem::size_of::<actor::Request>() <= 48);
+        assert!(mem::size_of::<actor::Request>() <= 56);
         assert!(mem::size_of::<actor::Response>() <= 40);
         assert!(mem::size_of::<actor::Notification>() <= 16);
-        assert!(mem::size_of::<actor::Addr>() <= 24);
-        assert!(mem::size_of::<ReactiveAddr>() <= 16);
+        assert!(mem::size_of::<actor::Addr>() <= 32);
+        assert!(mem::size_of::<ReactiveAddr>() <= 24);
+    }
+
+    #[test]
+    fn test_timer_compare() {
+        let begin = Instant::new(time::Instant::now());
+        let mut end;
+        loop {
+            end = Instant::new(time::Instant::now());
+            if end.saturating_sub(&begin) > Duration::ZERO {
+                break;
+            }
+        }
+
+        assert!(
+            Timer {
+                id: 345,
+                deadline: begin
+            } == Timer {
+                id: 345,
+                deadline: begin
+            }
+        );
+        assert!(
+            Timer {
+                id: 1,
+                deadline: begin
+            } > Timer {
+                id: 0,
+                deadline: begin
+            }
+        );
+
+        assert!(
+            Timer {
+                id: 13,
+                deadline: begin
+            } < Timer {
+                id: 45,
+                deadline: end
+            }
+        );
+        assert!(
+            Timer {
+                id: 13,
+                deadline: end
+            } > Timer {
+                id: 45,
+                deadline: begin
+            }
+        );
+
+        assert!(
+            Timer {
+                id: 0,
+                deadline: InternalInstant::Infinity.into_instant()
+            } > Timer {
+                id: u32::MAX,
+                deadline: begin
+            }
+        );
+
+        assert!(
+            Timer {
+                id: 1234567,
+                deadline: InternalInstant::Infinity.into_instant()
+            } < Timer {
+                id: 1234568,
+                deadline: InternalInstant::Infinity.into_instant()
+            }
+        );
+        assert!(
+            Timer {
+                id: 55555,
+                deadline: InternalInstant::Infinity.into_instant()
+            } == Timer {
+                id: 55555,
+                deadline: InternalInstant::Infinity.into_instant()
+            }
+        );
     }
 }

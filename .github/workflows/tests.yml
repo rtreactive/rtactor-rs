@@ -8,8 +8,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        rust-version: [1.64.0]
+        rust-version: [1.64.0, 1.86.0]
     runs-on: ubuntu-24.04
+    env:
+      TOOLCHAIN_RUST_VERSION: ${{matrix.rust-version}}
     steps:
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@master
@@ -23,16 +25,27 @@ jobs:
       - name: Cargo cache
         uses: Swatinem/rust-cache@v2
 
+      # Build not for the latest version use a different lock file.
+      - name: Replace Cargo.lock for a specific version
+        run: |
+          if [ -f Cargo.lock-${TOOLCHAIN_RUST_VERSION} ]; then
+            cp -v Cargo.lock-${TOOLCHAIN_RUST_VERSION} Cargo.lock
+          fi
+
       - name: Check Format
         run: cargo fmt --all --check
 
       - name: Clippy 
         uses: actions-rs-plus/clippy-check@v2.1.1
         with:
-          args: --all-features
+          args: --all-features --all-targets
 
       - name: Build
         run: cargo build
 
-      - name: Test
+      - name: Test with default features
         run: cargo test
+      
+      - name: Test with all features
+        run: cargo test --all-features
+

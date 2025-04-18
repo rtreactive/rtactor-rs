@@ -36,9 +36,9 @@ fn sync_macros() {
 
     struct TestReactive {}
     impl rtactor::Behavior for TestReactive {
-        fn process_message<'a>(
+        fn process_message(
             &mut self,
-            context: &'a mut rtactor::ProcessContext,
+            context: &mut rtactor::ProcessContext,
             msg: &rtactor::Message,
         ) {
             match msg {
@@ -173,9 +173,9 @@ fn test_sim_sync_accessor_invalid_request_id() {
 
     struct TestReactive {}
     impl rtactor::Behavior for TestReactive {
-        fn process_message<'a>(
+        fn process_message(
             &mut self,
-            context: &'a mut rtactor::ProcessContext,
+            context: &mut rtactor::ProcessContext,
             msg: &rtactor::Message,
         ) {
             match msg {
