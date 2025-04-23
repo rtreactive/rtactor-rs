@@ -53,9 +53,13 @@ mod has_mockall {
 
         assert!(mocker.addr().is_valid());
 
+        let mut seq = rt::mockall::Sequence::new();
+
         mocker
             .mock()
             .expect_process_request()
+            .times(1)
+            .in_sequence(&mut seq)
             .returning(|data, context, request| {
                 let_assert!(Some(Request::SendAString { s }) = request.data.downcast_ref());
                 assert_eq!(s, "a string");
@@ -64,10 +68,27 @@ mod has_mockall {
                 context.send_response(request, Response::SendAString());
             });
 
+        mocker
+            .mock()
+            .expect_process_request()
+            .times(1)
+            .in_sequence(&mut seq)
+            .returning(|data, context, request| {
+                let_assert!(Some(Request::SendAString { s }) = request.data.downcast_ref());
+                assert_eq!(s, "");
+                assert_eq!(data.a_data, -7.2);
+
+                context.send_response(request, Response::SendAString());
+            });
+
         let mut accessor = SimSyncAccessor::new(&disp, &mocker.addr());
 
         accessor
             .send_a_string("a string".to_string(), Duration::ZERO)
+            .unwrap();
+        mocker.data().a_data = -7.2;
+        accessor
+            .send_a_string("".to_string(), Duration::ZERO)
             .unwrap();
 
         mocker.mock().checkpoint();

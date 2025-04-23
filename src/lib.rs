@@ -269,3 +269,8 @@ pub use reactive::Timer;
 
 #[cfg(feature = "mockall")]
 pub use reactive::MockBehavior;
+
+// This crate used in the interface is reexported to allow user to build with the same version.
+// see https://doc.rust-lang.org/rustdoc/write-documentation/re-exports.html
+#[cfg(feature = "mockall")]
+pub use mockall;

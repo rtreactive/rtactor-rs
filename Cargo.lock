@@ -504,7 +504,7 @@ dependencies = [
 
 [[package]]
 name = "rtactor"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "approx",
  "assert2",
