@@ -1,6 +1,6 @@
 [package]
 name = "rtactor"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 license = "MIT"
 description = "An Actor framework specially designed for Real-Time constrained use cases."
