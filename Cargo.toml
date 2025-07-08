@@ -13,6 +13,7 @@ keywords = ["real-time", "actor", "framework", "async"]
 [dependencies]
 rtactor-macros = { version="0.5.0", path = "rtactor-macros" }
 mockall = {version = ">= 0.11, <= 0.13", optional = true}
+async-channel = {version = "2"}
 
 [dev-dependencies]
 oorandom = "11" # rand crate is way to big, complex and difficult to port to MCU
