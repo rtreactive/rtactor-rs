@@ -49,7 +49,7 @@
 //! fn test(addr: rtactor::Addr)
 //! {
 //!     let accessor = MyNotifSyncAccessor::new(&addr);
-//!     accessor.temperature_changed(13.2f32).unwarp();
+//!     accessor.temperature_changed(13.2f32).unwrap();
 //! }
 //! ```
 //!
@@ -84,7 +84,7 @@
 //! fn test(addr: rtactor::Addr)
 //! {
 //!     let accessor = MyNotifSyncAccessor::new(&addr);
-//!     accessor.temperature_changed(13.2f32).unwarp();
+//!     accessor.temperature_changed(13.2f32).unwrap();
 //!     accessor.set_value(72).unwrap();
 //!     assert!(accessor.get_value().unwrap() == 72);
 //! }

@@ -1,0 +1,48 @@
+{
+  "version": "0.2",
+  "language": "en, en-US, en-GB",
+  "words": [
+    "addrs",
+    "automock",
+    "confs",
+    "datagram",
+    "disp",
+    "dtolnay",
+    "foobar",
+    "millis",
+    "mockall",
+    "mpsc",
+    "notif",
+    "oorandom",
+    "ordonnancer",
+    "prng",
+    "Proc",
+    "reactives",
+    "recv",
+    "resp",
+    "rstest",
+    "rtactor",
+    "struct",
+    "Swatinem"
+  ],
+  "ignorePaths": [
+    "target/**"
+  ],
+  "languageSettings": [
+    {
+      "languageId": "rust",
+      "locale": "en, en-US, en-GB",
+      "caseSensitive": true
+    }
+  ],
+  "overrides": [
+    {
+      "filename": "**/*.yml",
+      "words": [
+        "rustc",
+        "rustfmt",
+        "clippy"
+      ]
+    }
+  ]
+}

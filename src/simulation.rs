@@ -195,7 +195,7 @@ impl SimulationDispatcher {
                         ControlFlow::Continue(()) => (),
                         ControlFlow::Break(duration) => {
                             if duration != Duration::MAX && ((self.now() + duration) < instant) {
-                                // If there is a timeout before instant, avance to it deadline.
+                                // If there is a timeout before instant, advance to it deadline.
                                 self.instant_source.advance_for(duration);
                             } else if instant.at_inf() {
                                 // If the instant is infinity, continue the processing, break_func can have some side effect.
@@ -212,7 +212,7 @@ impl SimulationDispatcher {
                 break;
             }
 
-            // advance until new timeout or timepoint reached, break if duration reached
+            // advance until new timeout or time point reached, break if duration reached
             // min(instant, first_timeout_instant)
         }
     }
