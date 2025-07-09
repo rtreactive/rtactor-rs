@@ -1,6 +1,6 @@
 [package]
 name = "rtactor-macros"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 license = "MIT"
 description = "Proc macro crate for the rtactor real-time actor framework."

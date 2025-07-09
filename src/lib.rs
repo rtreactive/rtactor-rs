@@ -267,6 +267,12 @@ pub use reactive::ProcessContext;
 pub use reactive::Timeout;
 pub use reactive::Timer;
 
+#[cfg(feature = "async-actor")]
+pub mod async_actor;
+
+#[cfg(feature = "async-actor")]
+pub use async_actor::{AsyncAccessor, AsyncActor};
+
 #[cfg(feature = "mockall")]
 pub use reactive::MockBehavior;
 

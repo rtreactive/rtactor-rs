@@ -259,13 +259,13 @@ fn test_replace_reactive() {
     let mut disp = SimulationDispatcher::new(10);
 
     // Create a reactive object on the heap.
-    let test_reactive_1 = Box::new(rtactor::DummyBehavior::default());
+    let test_reactive_1 = Box::<rtactor::DummyBehavior>::default();
 
     // Move it inside the dispatcher. It starts the dispatch of messages for it.
     let test_reactive_addr = disp.register_reactive(test_reactive_1);
 
     // Create another reactive object.
-    let test_reactive_2 = Box::new(rtactor::DummyBehavior::default());
+    let test_reactive_2 = Box::<rtactor::DummyBehavior>::default();
 
     // Replace the first reactive by the second.
     let result = disp.replace_reactive(&test_reactive_addr, test_reactive_2);
