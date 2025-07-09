@@ -13,7 +13,7 @@ pub struct ActiveActor {
     rx: mpsc::Receiver<Message>,
     tx: mpsc::SyncSender<Message>,
     last_request_id: RequestId,
-    // list to store messages poped from rx but not consumed because of filtered receive.
+    // list to store messages popped from rx but not consumed because of filtered receive.
     message_list: LinkedList<Message>,
 }
 
@@ -150,12 +150,12 @@ impl ActiveActor {
         }
     }
 
-    /// Wait Indefinitly for a message.
+    /// Wait indefinitely for a message.
     pub fn wait_message(&mut self) -> Result<Message, actor::Error> {
         self.wait_message_for(Duration::MAX)
     }
 
-    /// Wait for a message for a given amound of duration.
+    /// Wait for a message for a given amount of duration.
     pub fn wait_message_for(&mut self, timeout: Duration) -> Result<Message, actor::Error> {
         // look in linked list
         if let Some(message) = self.message_list.pop_back() {
@@ -175,7 +175,7 @@ impl ActiveActor {
     /// Send notification.
     ///
     /// This method is equivalent to the function rtactor::send_notification()
-    /// but is prefered because it allows possible future thread local memory allocation.
+    /// but is preferred because it allows possible future thread local memory allocation.
     pub fn send_notification<T>(&mut self, dst: &actor::Addr, data: T) -> Result<(), crate::Error>
     where
         T: 'static + Send,

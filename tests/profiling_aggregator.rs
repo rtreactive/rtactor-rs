@@ -218,7 +218,7 @@ mod with_mockall {
 
             fix.disp.borrow_mut().process_for(Duration::ZERO);
 
-            // ---------- unregistration ---------------
+            // ---------- un-registration --------------
 
             fix.aggregator_accessor()
                 .unregister_observer(fix.observer_mockers[0].addr(), Duration::ZERO)
@@ -313,7 +313,7 @@ mod with_mockall {
 
             fix.disp.borrow_mut().process_for(Duration::ZERO);
 
-            // ---------- unregistration ---------------
+            // ---------- un-registration --------------
 
             for observer_mocker in &fix.observer_mockers {
                 fix.aggregator_accessor()
