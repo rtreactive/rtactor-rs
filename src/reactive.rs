@@ -29,7 +29,7 @@ use std::time::Duration;
 /// The custom implementation of message handling for a given reactive actor.
 ///
 /// There are two ways to write mocks of reactive actors. There is the very simple
-/// `MockBeavior` that mocks directly this trait. Or a more complex and powerful
+/// `MockBehavior` that mocks directly this trait. Or a more complex and powerful
 /// `simulation::ReactiveMocker` that allows to change the mock during the tests, user
 /// data, etc.
 #[cfg_attr(feature = "mockall", mockall::automock)]
