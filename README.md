@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 -->
 # RTactor framework
 
 An *Actor* framework specially designed for *R*eal-*T*ime constrained use
