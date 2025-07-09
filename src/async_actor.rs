@@ -22,7 +22,7 @@ pub struct AsyncActor {
 /// and provide an async interface to an actor.
 #[allow(async_fn_in_trait)]
 pub trait AsyncAccessor {
-    async fn send_notification<T>(&mut self, data: T) -> Result<(), crate::Error>
+    fn send_notification<T>(&mut self, data: T) -> Result<(), crate::Error>
     where
         T: 'static + Send;
     async fn request_for<TRequest, TResponse>(
@@ -76,7 +76,7 @@ macro_rules! define_async_accessor{
         }
 
         impl ::rtactor::AsyncAccessor for $async_accessor_name {
-            async fn send_notification<T>(&mut self, data: T) -> Result<(), ::rtactor::Error>
+            fn send_notification<T>(&mut self, data: T) -> Result<(), ::rtactor::Error>
             where
             T: 'static + Send,
             {
