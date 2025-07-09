@@ -258,9 +258,6 @@ pub use actor::Response;
 pub use active::ActiveActor;
 pub use active::SyncAccessor;
 
-pub use async_actor::AsyncAccessor;
-pub use async_actor::AsyncActor;
-
 pub use mpsc_dispatcher::spawn_dispatcher;
 pub use mpsc_dispatcher::MpscDispatcher;
 pub use reactive::Behavior;
@@ -270,7 +267,11 @@ pub use reactive::ProcessContext;
 pub use reactive::Timeout;
 pub use reactive::Timer;
 
+#[cfg(feature = "async-actor")]
 pub mod async_actor;
+
+#[cfg(feature = "async-actor")]
+pub use async_actor::{AsyncAccessor, AsyncActor};
 
 #[cfg(feature = "mockall")]
 pub use reactive::MockBehavior;

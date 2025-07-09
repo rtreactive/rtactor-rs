@@ -41,6 +41,7 @@
       "words": [
         "rustc",
         "rustfmt",
+        "rustup",
         "clippy"
       ]
     }

@@ -1,9 +1,11 @@
 use super::active;
-use super::async_actor;
 use super::reactive;
 use std::any::Any;
 use std::cmp;
 use std::sync::Mutex;
+
+#[cfg(feature = "async-actor")]
+use super::async_actor;
 
 ////////////////////////////// public types /////////////////////////////////////
 
@@ -100,6 +102,7 @@ pub(crate) enum AddrKind {
     Invalid,
     Reactive(reactive::ReactiveAddr),
     Active(active::ActiveAddr),
+    #[cfg(feature = "async-actor")]
     Async(async_actor::AsyncAddr),
 }
 
@@ -160,6 +163,7 @@ impl Addr {
             AddrKind::Invalid => INVALID_ACTOR_ID,
             AddrKind::Reactive(reactive_addr) => reactive_addr.actor_id(),
             AddrKind::Active(active_addr) => active_addr.actor_id(),
+            #[cfg(feature = "async-actor")]
             AddrKind::Async(async_addr) => async_addr.actor_id(),
         }
     }
@@ -181,6 +185,7 @@ impl Addr {
             AddrKind::Invalid => Result::Err(Error::AddrUnreachable),
             AddrKind::Reactive(reactive_addr) => reactive_addr.receive_notification(data),
             AddrKind::Active(active_addr) => active_addr.receive_notification(data),
+            #[cfg(feature = "async-actor")]
             AddrKind::Async(async_addr) => async_addr.receive_notification(data),
         }
     }
@@ -201,6 +206,7 @@ impl Addr {
             }
             AddrKind::Reactive(reactive_addr) => reactive_addr.receive_request(src, id, data),
             AddrKind::Active(active_addr) => active_addr.receive_request(src, id, data),
+            #[cfg(feature = "async-actor")]
             AddrKind::Async(async_addr) => async_addr.receive_request(src, id, data),
         }
     }
@@ -219,6 +225,7 @@ impl Addr {
                 reactive_addr.receive_ok_response(request_id, result)
             }
             AddrKind::Active(active_addr) => active_addr.receive_ok_response(request_id, result),
+            #[cfg(feature = "async-actor")]
             AddrKind::Async(async_addr) => async_addr.receive_ok_response(request_id, result),
         }
     }
@@ -237,6 +244,7 @@ impl Addr {
                 reactive_addr.receive_err_response(request_id, result)
             }
             AddrKind::Active(active_addr) => active_addr.receive_err_response(request_id, result),
+            #[cfg(feature = "async-actor")]
             AddrKind::Async(async_addr) => async_addr.receive_err_response(request_id, result),
         }
     }

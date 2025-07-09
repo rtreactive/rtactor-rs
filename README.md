@@ -671,5 +671,5 @@ allocated from a memory pool, is a possible solution to have to only handle
 
 ### Rust version
 
-This project was tested with rust `1.64.0` and rust `1.86.0`.
+This project is tested with rust `1.75.0` and rust `1.86.0`.
 Version in between were not tested but should work.

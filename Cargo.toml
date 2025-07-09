@@ -6,14 +6,14 @@ license = "MIT"
 description = "An Actor framework specially designed for Real-Time constrained use cases."
 readme = "README.md"
 repository = "https://github.com/rtreactive/rtactor-rs"
-rust-version = "1.64"
+rust-version = "1.75"
 categories = ["asynchronous", "concurrency", "embedded"]
 keywords = ["real-time", "actor", "framework", "async"]
 
 [dependencies]
 rtactor-macros = { version="0.5.0", path = "rtactor-macros" }
 mockall = {version = ">= 0.11, <= 0.13", optional = true}
-async-channel = {version = "2"}
+async-channel = { version = "2", optional = true }
 
 [dev-dependencies]
 oorandom = "11" # rand crate is way to big, complex and difficult to port to MCU
@@ -24,3 +24,7 @@ env_logger = ">= 0.9, <= 0.11"
 mockall= ">= 0.11, <= 0.13"
 rstest = ">=0.15, <= 0.25"
 approx = "0.5"
+
+[features]
+default = ["async-actor"]
+async-actor = ["dep:async-channel"]
