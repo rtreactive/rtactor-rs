@@ -41,7 +41,7 @@
 //! A structure can add the generated methods by deriving `SyncNotifier` and
 //! implementing the methods of `SyncAccessData`. The macro `define_sync_accessor!()`
 //! found in create `rtactor` can be used to generate a struct that
-//! allows easy access with its internal ActiveActor:
+//! allows easy access with its internal ActiveMailbox:
 //! ```rs
 //! define_sync_accessor!(MyNotifSyncAccessor, SyncNotifier)
 //!
@@ -77,7 +77,7 @@
 //! A structure can add the generated methods by deriving `SyncRequester` and
 //! implementing the methods of `SyncAccessor`. The macro `define_sync_notifier!()`
 //! found in create `rtactor` can be used to generate a struct that
-//! allows easy access with its internal ActiveActor:
+//! allows easy access with its internal ActiveMailbox:
 //! ```rs
 //! define_sync_accessor!(MySyncAccessor, SyncNotifier, SyncRequester)
 //!

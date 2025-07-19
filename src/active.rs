@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 ////////////////////////////// public types /////////////////////////////////////
 
 /// Actor that has it own message queue and manage actively how to wait on it.
-pub struct ActiveActor {
+pub struct ActiveMailbox {
     id: actor::ActorId,
     rx: mpsc::Receiver<Message>,
     tx: mpsc::SyncSender<Message>,
@@ -16,6 +16,9 @@ pub struct ActiveActor {
     // list to store messages popped from rx but not consumed because of filtered receive.
     message_list: LinkedList<Message>,
 }
+
+#[deprecated = "use ActiveMailbox instead"]
+pub type ActiveActor = ActiveMailbox;
 
 /// Super trait used by SyncRequester and SyncNotifier to send requests and notifications
 ///
@@ -37,7 +40,7 @@ pub trait SyncAccessor {
 
 ////////////////////////////// internal types /////////////////////////////////////
 
-/// Address implementation to an `ActiveActor`
+/// Address implementation to an `ActiveMailbox`
 #[derive(Debug, Clone)]
 pub(crate) struct ActiveAddr {
     id: actor::ActorId,
@@ -60,14 +63,14 @@ macro_rules! define_sync_accessor{
     =>
     {
         pub struct $sync_accessor_name {
-            active_actor: ::rtactor::ActiveActor,
+            active_actor: ::rtactor::ActiveMailbox,
             target_addr: ::rtactor::Addr,
         }
 
         impl $sync_accessor_name {
             pub fn new(target_addr: &::rtactor::Addr) -> $sync_accessor_name {
                 $sync_accessor_name {
-                    active_actor: ::rtactor::ActiveActor::new(1),
+                    active_actor: ::rtactor::ActiveMailbox::new(1),
                     target_addr: target_addr.clone(),
                 }
             }
@@ -105,11 +108,11 @@ macro_rules! define_sync_accessor{
 }
 
 ////////////////////////////// public impl's /////////////////////////////////////
-impl ActiveActor {
+impl ActiveMailbox {
     /// Create an active actor with a given maximum queue.
-    pub fn new(queue_size: usize) -> ActiveActor {
+    pub fn new(queue_size: usize) -> ActiveMailbox {
         let (tx, rx) = std::sync::mpsc::sync_channel::<Message>(queue_size);
-        ActiveActor {
+        ActiveMailbox {
             id: actor::generate_actor_id(),
             rx,
             tx,
@@ -378,7 +381,7 @@ mod tests {
 
     #[test]
     fn generate_request_id() {
-        let mut actor = ActiveActor::new(1);
+        let mut actor = ActiveMailbox::new(1);
 
         assert_eq!(actor.generate_request_id(), 1);
 

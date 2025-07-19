@@ -119,7 +119,7 @@ where
 
 /// Send notification.
 ///
-/// ProcessContext::send_notification() and ActiveActor::send_notification()
+/// ProcessContext::send_notification() and ActiveMailbox::send_notification()
 /// are preferred because they allow future thread local memory allocation.
 pub fn send_notification<T>(dst_addr: &Addr, data: T) -> Result<(), Error>
 where

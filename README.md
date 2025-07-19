@@ -514,7 +514,7 @@ fn test_broadcaster_simulated() {
     // Create an active actor to simulate the CAN controller. Here the
     // actor interface is used to fake the behavior. It is also possible to
     // use mock created with mock libs like `mockall`.
-    let mut fake_can = rt::ActiveActor::new(10);
+    let mut fake_can = rt::ActiveMailbox::new(10);
 
     // It is necessary to bring these trait to the scope to use them.
     use crate::acceleration_broadcaster::{SyncNotifier, SyncRequester};
@@ -550,7 +550,7 @@ fn test_broadcaster_simulated() {
         // It is very important to use the method `active_wait_message*` of the dispatcher
         // when working with active actors. This insures processing of the queued messages
         // in the dispatcher and use of the simulated time. It's not the case if
-        // `ActiveActor::wait_message*` methods of `ActiveActor` are used.
+        // `ActiveMailbox::wait_message*` methods of `ActiveMailbox` are used.
         let msg = disp
             .borrow_mut()
             .active_wait_message_for(&mut fake_can, Duration::ZERO)
@@ -618,7 +618,7 @@ fn test_broadcaster_threaded() {
     );
     use crate::acceleration_broadcaster::SyncRequester;
 
-    let fake_can = rt::ActiveActor::new(10);
+    let fake_can = rt::ActiveMailbox::new(10);
 
     // Simply start and stop the broadcaster.
     broadcaster_accessor

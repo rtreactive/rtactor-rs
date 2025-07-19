@@ -1,5 +1,5 @@
 use assert2::let_assert;
-use rtactor::{ActiveActor, Addr, Error, Message};
+use rtactor::{ActiveMailbox, Addr, Error, Message};
 use std::cell::RefCell;
 use std::time::Duration;
 use std::vec::Vec;
@@ -9,7 +9,18 @@ fn test_addr() {
     let mut addr = Addr::new();
     assert!(!addr.is_valid());
 
-    let actor = ActiveActor::new(1);
+    let actor = ActiveMailbox::new(1);
+    addr = actor.addr();
+    assert!(addr.is_valid());
+}
+
+#[test]
+#[allow(deprecated)]
+fn test_deprecated_active_actor_addr() {
+    let mut addr = Addr::new();
+    assert!(!addr.is_valid());
+
+    let actor = rtactor::ActiveActor::new(1);
     addr = actor.addr();
     assert!(addr.is_valid());
 }
@@ -18,7 +29,7 @@ fn test_addr() {
 /// Check if it's possible to send a buffer and extract it from an immutable Message reference.
 /// This is important because this way it's possible not to do a memory copy of large buffers passed.
 fn send_buffer_without_copy() {
-    let mut receiver = ActiveActor::new(1);
+    let mut receiver = ActiveMailbox::new(1);
 
     enum Notification {
         Buffer(RefCell<Option<Vec<u8>>>),
@@ -48,15 +59,15 @@ fn send_buffer_without_copy() {
 }
 
 #[test]
-/// Send a request from an active actor and use ActiveActor::responds() to respond.
+/// Send a request from an active actor and use ActiveMailbox::responds() to respond.
 fn test_responds() {
-    let mut requester = ActiveActor::new(1);
+    let mut requester = ActiveMailbox::new(1);
 
     let_assert!(
         Err(Error::AddrUnreachable) =
             requester.request_for::<_, u32>(&Addr::INVALID, 0x1234, Duration::from_secs(5))
     );
-    let requested_full_queue = ActiveActor::new(1);
+    let requested_full_queue = ActiveMailbox::new(1);
     rtactor::send_notification(&requested_full_queue.addr(), 23).unwrap();
 
     let_assert!(
@@ -65,7 +76,7 @@ fn test_responds() {
     );
 
     let requester_addr = requester.addr();
-    let mut requested = ActiveActor::new(1);
+    let mut requested = ActiveMailbox::new(1);
     let requested_addr = requested.addr();
 
     let join_handle = std::thread::spawn(move || {
