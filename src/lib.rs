@@ -271,7 +271,7 @@ pub use reactive::Timer;
 pub mod async_actor;
 
 #[cfg(feature = "async-actor")]
-pub use async_actor::{AsyncAccessor, AsyncActor};
+pub use async_actor::{AsyncAccessor, AsyncMailbox};
 
 #[cfg(feature = "mockall")]
 pub use reactive::MockBehavior;

@@ -7,7 +7,7 @@ use std::time::Duration;
 ////////////////////////////// public types /////////////////////////////////////
 
 /// Actor that has it own message queue and manage actively how to wait on it.
-pub struct AsyncActor {
+pub struct AsyncMailbox {
     id: actor::ActorId,
     rx: async_channel::Receiver<Message>,
     tx: async_channel::Sender<Message>,
@@ -37,7 +37,7 @@ pub trait AsyncAccessor {
 
 ////////////////////////////// internal types /////////////////////////////////////
 
-/// Address implementation to an `AsyncActor`
+/// Address implementation to an `AsyncMailbox`
 #[derive(Debug, Clone)]
 pub(crate) struct AsyncAddr {
     id: actor::ActorId,
@@ -46,13 +46,13 @@ pub(crate) struct AsyncAddr {
 
 ////////////////////////////// public macros /////////////////////////////////////
 
-/// Create a struct that allows a blocking access to a address and implements one or more SyncRequester or SyncNotifier
+/// Create a struct that allows a blocking access to a address and implements one or more AsyncRequester or AsyncNotifier
 ///
 /// Example:
 /// ```rs
-/// define_syn_accessor(MySyncAccessorStructName, FirstSyncRequesterName, SecondSyncRequesterName, ...);
+/// define_async_accessor(MyAsyncAccessorStructName, FirstAsyncRequesterName, SecondAsyncRequesterName, ...);
 /// ```
-/// The struct implements `SyncAccessData`. It will have a function new(&Addr) -> MySyncAccessorStructName
+/// The struct implements `MyAsyncAccessorStructName`. It will have a function `new(&Addr) -> MyAsyncAccessorStructName`
 /// and implement all traits following the structName without changes of they default implementation.
 #[macro_export]
 macro_rules! define_async_accessor{
@@ -60,14 +60,14 @@ macro_rules! define_async_accessor{
     =>
     {
         pub struct $async_accessor_name {
-            async_actor: ::rtactor::AsyncActor,
+            async_actor: ::rtactor::AsyncMailbox,
             target_addr: ::rtactor::Addr,
         }
 
         impl $async_accessor_name {
             pub fn new(target_addr: &::rtactor::Addr) -> $async_accessor_name {
                 $async_accessor_name {
-                    async_actor: ::rtactor::AsyncActor::new(1),
+                    async_actor: ::rtactor::AsyncMailbox::new(1),
                     target_addr: target_addr.clone(),
                 }
             }
@@ -105,11 +105,11 @@ macro_rules! define_async_accessor{
 }
 
 ////////////////////////////// public impl's /////////////////////////////////////
-impl AsyncActor {
+impl AsyncMailbox {
     /// Create an async actor with a given maximum queue.
-    pub fn new(queue_size: usize) -> AsyncActor {
+    pub fn new(queue_size: usize) -> AsyncMailbox {
         let (tx, rx) = async_channel::bounded(queue_size);
-        AsyncActor {
+        AsyncMailbox {
             id: actor::generate_actor_id(),
             rx,
             tx,
@@ -157,7 +157,7 @@ impl AsyncActor {
             return Result::Ok(message);
         }
 
-        // wait in mpsc queue
+        // wait on the queue
         match self.rx.recv().await {
             Ok(message) => Result::Ok(message),
             Err(..) => Result::Err(actor::Error::BrokenReceive),
@@ -351,7 +351,7 @@ mod tests {
 
     #[test]
     fn generate_request_id() {
-        let mut actor = AsyncActor::new(1);
+        let mut actor = AsyncMailbox::new(1);
 
         assert_eq!(actor.generate_request_id(), 1);
 

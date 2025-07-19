@@ -2,7 +2,7 @@
 
 use assert2::let_assert;
 use macro_rules_attribute::apply;
-use rtactor::{Addr, AsyncActor, Error, Message};
+use rtactor::{Addr, AsyncMailbox, Error, Message};
 use smol_macros::test;
 use std::cell::RefCell;
 use std::time::Duration;
@@ -13,16 +13,16 @@ fn test_addr() {
     let mut addr = Addr::new();
     assert!(!addr.is_valid());
 
-    let actor = AsyncActor::new(1);
+    let actor = AsyncMailbox::new(1);
     addr = actor.addr();
     assert!(addr.is_valid());
 }
 
 #[apply(test!)]
-/// Check if it's possible to send a buffer and extract it from a immutable Message reference.
+/// Check if it's possible to send a buffer and extract it from an immutable Message reference.
 /// This is important because this way it's possible not to do a memory copy of large buffers passed.
 async fn send_buffer_without_copy() {
-    let mut receiver = AsyncActor::new(1);
+    let mut receiver = AsyncMailbox::new(1);
 
     enum Notification {
         Buffer(RefCell<Option<Vec<u8>>>),
@@ -52,16 +52,16 @@ async fn send_buffer_without_copy() {
 }
 
 #[apply(test!)]
-/// Send a request from an active actor and use AsyncActor::responds() to respond.
+/// Send a request from an async actor and use AsyncMailbox::responds() to respond.
 async fn test_responds() {
-    let mut requester = AsyncActor::new(1);
+    let mut requester = AsyncMailbox::new(1);
 
     let_assert!(
         Err(Error::AddrUnreachable) = requester
             .request_for::<_, u32>(&Addr::INVALID, 0x1234, Duration::from_secs(5))
             .await
     );
-    let requested_full_queue = AsyncActor::new(1);
+    let requested_full_queue = AsyncMailbox::new(1);
     rtactor::send_notification(&requested_full_queue.addr(), 23).unwrap();
 
     let_assert!(
@@ -71,7 +71,7 @@ async fn test_responds() {
     );
 
     let requester_addr = requester.addr();
-    let mut requested = AsyncActor::new(1);
+    let mut requested = AsyncMailbox::new(1);
     let requested_addr = requested.addr();
 
     let join_handle = smol::spawn(async move {

@@ -15,7 +15,7 @@ fn test_addr() {
 }
 
 #[test]
-/// Check if it's possible to send a buffer and extract it from a immutable Message reference.
+/// Check if it's possible to send a buffer and extract it from an immutable Message reference.
 /// This is important because this way it's possible not to do a memory copy of large buffers passed.
 fn send_buffer_without_copy() {
     let mut receiver = ActiveActor::new(1);
