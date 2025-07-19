@@ -2,7 +2,7 @@ use assert2::{assert, check, let_assert};
 use panic_context::*;
 use rtactor::simulation::SimulationDispatcher;
 use rtactor::{
-    dispatcher, send_notification, ActiveActor, Addr, Behavior, Message, ProcessContext, Timer,
+    dispatcher, send_notification, ActiveMailbox, Addr, Behavior, Message, ProcessContext, Timer,
 };
 use std::vec::Vec;
 
@@ -85,7 +85,7 @@ fn simple_simulation_dispatcher() {
     send_notification(&test_reactive_addr, Notification::Increment(10)).unwrap();
 
     // Create an active object to interact with the reactive under test.
-    let mut prober = ActiveActor::new(1);
+    let mut prober = ActiveMailbox::new(1);
 
     // Ask the simulation dispatcher to simulate a request by the active actor.
     let result = disp.active_request_for::<_, Response>(
@@ -227,7 +227,7 @@ fn timer_test() {
         }
     }
 
-    let mut observer = ActiveActor::new(1);
+    let mut observer = ActiveMailbox::new(1);
 
     let mut disp = SimulationDispatcher::new(1);
 
@@ -259,13 +259,13 @@ fn test_replace_reactive() {
     let mut disp = SimulationDispatcher::new(10);
 
     // Create a reactive object on the heap.
-    let test_reactive_1 = Box::new(rtactor::DummyBehavior::default());
+    let test_reactive_1 = Box::<rtactor::DummyBehavior>::default();
 
     // Move it inside the dispatcher. It starts the dispatch of messages for it.
     let test_reactive_addr = disp.register_reactive(test_reactive_1);
 
     // Create another reactive object.
-    let test_reactive_2 = Box::new(rtactor::DummyBehavior::default());
+    let test_reactive_2 = Box::<rtactor::DummyBehavior>::default();
 
     // Replace the first reactive by the second.
     let result = disp.replace_reactive(&test_reactive_addr, test_reactive_2);

@@ -4,7 +4,7 @@ use rstest::rstest;
 use rtactor as rt;
 use rtactor::dispatcher;
 use rtactor::{
-    self, send_notification, spawn_dispatcher, ActiveActor, Addr, Behavior, Message,
+    self, send_notification, spawn_dispatcher, ActiveMailbox, Addr, Behavior, Message,
     ProcessContext, RequestId, Timer,
 };
 use std::cmp::max;
@@ -72,7 +72,7 @@ impl Behavior for CountdownReactive {
 fn start_stop_empty_dispatcher() {
     let (addr, join_handle, _) = spawn_dispatcher(10, |_| {});
 
-    let mut stopper = ActiveActor::new(1);
+    let mut stopper = ActiveMailbox::new(1);
     let response = stopper.request_for::<_, dispatcher::Response>(
         &addr,
         dispatcher::Request::StopDispatcher {},
@@ -199,7 +199,7 @@ fn simple_threaded_dispatcher() {
     send_notification(&test_reactive_addr, Notification::Increment(10)).unwrap();
 
     // Create an active object to interact with the reactive under test.
-    let mut prober = ActiveActor::new(1);
+    let mut prober = ActiveMailbox::new(1);
 
     // Request the value.
     let_assert!(
@@ -491,7 +491,7 @@ fn multithread_stress_test() {
     let mut remaining_stress_tester = N_STRESS_TESTER;
     let mut join_handles = Vec::<JoinHandle<()>>::new();
     let mut prng = oorandom::Rand32::new(SEED);
-    let mut ordonnancer = ActiveActor::new(N_STRESS_TESTER);
+    let mut ordonnancer = ActiveMailbox::new(N_STRESS_TESTER);
 
     // Start a number of dispatchers.
     for i_disp in 0..N_DISPATCHER {
@@ -712,7 +712,7 @@ fn timer_test() {
             }
         }
     }
-    let mut observer = ActiveActor::new(1);
+    let mut observer = ActiveMailbox::new(1);
     let observer_addr = observer.addr();
 
     // Start a dispatcher inside its own thread.
