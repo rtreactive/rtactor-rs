@@ -3,7 +3,7 @@ use crate::Request;
 use std::boxed::Box;
 use std::collections::LinkedList;
 use std::sync::mpsc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 ////////////////////////////// public types /////////////////////////////////////
 
@@ -13,7 +13,7 @@ pub struct ActiveMailbox {
     rx: mpsc::Receiver<Message>,
     tx: mpsc::SyncSender<Message>,
     last_request_id: RequestId,
-    // list to store messages popped from rx but not consumed because of filtered receive.
+    /// list to store messages popped from rx but not consumed because of filtered receive.
     message_list: LinkedList<Message>,
 }
 
@@ -249,23 +249,6 @@ impl ActiveMailbox {
                 }
             }
         }
-    }
-
-    /*
-    // TODO implement
-    fn wait_filter_message_for(&self, filter: dyn Fn(&Message ) -> bool + 'static + 'Sized, timeout: Duration) -> actor::Error
-    {
-        // search in linked list
-
-        // wait in
-    }
-    */
-
-    pub fn wait_for(_duration: Duration) {
-        todo!();
-    }
-    pub fn wait_until(_instant: Instant) {
-        todo!()
     }
 
     pub(crate) fn generate_request_id(&mut self) -> RequestId {

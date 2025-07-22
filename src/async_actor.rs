@@ -12,7 +12,7 @@ pub struct AsyncMailbox {
     rx: async_channel::Receiver<Message>,
     tx: async_channel::Sender<Message>,
     last_request_id: RequestId,
-    // list to store messages popped from rx but not consumed because of filtered receive.
+    /// list to store messages popped from rx but not consumed because of filtered receive.
     message_list: LinkedList<Message>,
 }
 
