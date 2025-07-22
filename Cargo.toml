@@ -14,7 +14,6 @@ keywords = ["real-time", "actor", "framework", "async"]
 async-channel = { version = "2", optional = true }
 mockall = {version = ">= 0.11, <= 0.13", optional = true}
 rtactor-macros = { version="0.5.0", path = "rtactor-macros" }
-smol = { version = "2.0", optional = true }
 
 [dev-dependencies]
 approx = "0.5"
@@ -31,4 +30,4 @@ smol-macros = "0.1"
 
 [features]
 default = ["async-actor"]
-async-actor = ["dep:async-channel", "dep:smol"]
+async-actor = ["dep:async-channel"]
