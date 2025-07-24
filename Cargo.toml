@@ -34,5 +34,7 @@ tokio-test = "0.4"
 [features]
 default = ["async-actor"]
 async-actor = ["dep:async-channel"]
+# If both `async-tokio` and a `async-smol` are activated, timeouts are implemented with tokio.
+# If none of them are activated, async methods with timeout argument never time out.
 async-tokio = ["async-actor", "dep:tokio"]
 async-smol = ["async-actor", "dep:smol"]
