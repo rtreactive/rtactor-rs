@@ -149,19 +149,66 @@ impl AsyncMailbox {
         self.wait_message_for(Duration::MAX).await
     }
 
+    /// Wait for receiving a message
+    /// This function will use different strategies depending on the feature flags:
+    /// - If just `async-actor` is enabled, it will never timeout and wait indefinitely.
+    /// - If `async-tokio` is enabled, it will use tokio's async runtime with a timeout.
+    /// - If `async-smol` is enabled, it will use smol's async runtime with a timeout.
+    /// - If all features are enable it will use the tokio runtime.
+    #[allow(unreachable_code)]
+    #[allow(unused_variables)]
+    async fn wait_for_rx_message(&mut self, timeout: Duration) -> Result<Message, actor::Error> {
+        #[cfg(feature = "async-tokio")]
+        {
+            let result = match tokio::time::timeout(timeout, self.rx.recv()).await {
+                Ok(Ok(message)) => Ok(message),
+                Ok(Err(_)) => Err(actor::Error::BrokenReceive),
+                Err(_) => Err(actor::Error::Timeout),
+            };
+            return result;
+        }
+
+        // This is only reachable if the `async-tokio` feature is not enabled.
+        #[cfg(feature = "async-smol")]
+        {
+            use smol::Timer;
+
+            let recv_future = async {
+                match self.rx.recv().await {
+                    Ok(message) => Ok(Ok(message)),
+                    Err(_) => Ok(Err(actor::Error::BrokenReceive)),
+                }
+            };
+            let timeout_future = async {
+                Timer::after(timeout).await;
+                Err(actor::Error::Timeout)
+            };
+
+            let result = match smol::future::race(recv_future, timeout_future).await {
+                Ok(result) => result,
+                Err(timeout_err) => Err(timeout_err),
+            };
+            return result;
+        }
+
+        // This is only reachable if neither the `async-tokio` nor `async-smol` features are enabled.
+        // In this case, we will wait indefinitely.
+        let result = self.rx.recv().await;
+        match result {
+            Ok(message) => Ok(message),
+            Err(async_channel::RecvError) => Err(actor::Error::BrokenReceive),
+        }
+    }
+
     /// Wait for a message for a given amount of duration.
-    // TODO implement timeout
-    pub async fn wait_message_for(&mut self, _timeout: Duration) -> Result<Message, actor::Error> {
+    pub async fn wait_message_for(&mut self, timeout: Duration) -> Result<Message, actor::Error> {
         // look in linked list
         if let Some(message) = self.message_list.pop_back() {
             return Result::Ok(message);
         }
 
-        // wait on the queue
-        match self.rx.recv().await {
-            Ok(message) => Result::Ok(message),
-            Err(..) => Result::Err(actor::Error::BrokenReceive),
-        }
+        // wait on the queue with timeout
+        self.wait_for_rx_message(timeout).await
     }
 
     /// Send notification.
@@ -189,7 +236,7 @@ impl AsyncMailbox {
         &mut self,
         dst: &actor::Addr,
         request_data: TRequest,
-        _timeout: Duration,
+        timeout: Duration,
     ) -> Result<TResponse, actor::Error>
     where
         TRequest: 'static + Send + Sized,
@@ -199,7 +246,7 @@ impl AsyncMailbox {
         dst.receive_request(&self.addr(), request_id, request_data);
 
         loop {
-            let result = self.rx.recv().await;
+            let result = self.wait_for_rx_message(timeout).await;
 
             match result {
                 Ok(actor::Message::Response(response)) => match response.result {
@@ -229,7 +276,7 @@ impl AsyncMailbox {
                     self.message_list.push_back(msg);
                     continue;
                 }
-                Err(async_channel::RecvError) => {
+                Err(_) => {
                     return Err(actor::Error::BrokenReceive);
                 }
             }

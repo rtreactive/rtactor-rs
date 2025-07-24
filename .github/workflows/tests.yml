@@ -24,6 +24,8 @@ jobs:
 
       - name: Cargo cache
         uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{matrix.rust-version}}
 
       # Build not for the latest version use a different lock file.
       - name: Replace Cargo.lock for a specific version
@@ -54,4 +56,11 @@ jobs:
 
       - name: Test with all features
         run: cargo +${{matrix.rust-version}} test --all-features
+
+      - name: Test with async-tokio feature
+        run: cargo +${{matrix.rust-version}} test --features async-tokio
+
+      - name: Test with async-smol feature
+        run: cargo +${{matrix.rust-version}} test --features async-smol
+
 
