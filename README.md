@@ -100,6 +100,29 @@ executed in the thread of the unit test, it removes thread-safety concerns from
 unit tests. The time is simulated, so that the unit test does not depend on the
 execution speed and use cases with very long durations can be tested.
 
+### Async Integration
+
+While `rtactor` is designed for real-time constraints where traditional async
+runtimes are impractical, the framework provides async integration features for
+bridging with async ecosystems.
+
+The `async-actor` feature allows reactive actors to seamlessly interact with
+async code through async message sending and receiving interfaces.
+This enables hybrid architectures where time-critical components use
+`rtactor`'s deterministic dispatching while non-critical components leverage
+the broader async ecosystem.
+The async interfaces maintain the same request-response and notification
+patterns as the synchronous API, but return futures that can be awaited in
+async contexts. This is particularly useful for integrating with async I/O
+operations, web servers, or other async libraries while preserving the
+real-time guarantees for critical processing paths.
+
+The `async-tokio` and `async-smol` features provide timeout implementations
+for those runtimes, for specific calls that accept a timeout.
+If none of those features are enabled, timeouts are ignored and calls wait
+indefinitely. This behavior is explained in detail in the relevant functions
+documentation.
+
 ## A minimal example of a reactive actor <a name="h2_minimal_example"></a>
 
 Let's start with a very simple example that does almost nothing. A `Client` struct and
