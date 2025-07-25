@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- reexport of `mockall` crate
+- add async capabilities with `async-actor`, `async-tokio`, and `async-smol` features
+
+### Changed
+
+- update minimum version of rust to 1.75 (for using async fn in a trait)
+- update default version of rust to 1.86
+- rename `ActiveActor` to `ActiveMailbox` (kept a deprecated alias for `ActiveActor`)
+
 ## [0.5.1] - 2025-04-18
 
 ### Changed
