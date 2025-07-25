@@ -231,7 +231,6 @@ impl AsyncMailbox {
     }
 
     /// Send a request and wait for the response for a given duration.
-    // TODO implement timeout
     pub async fn request_for<TRequest, TResponse>(
         &mut self,
         dst: &actor::Addr,
