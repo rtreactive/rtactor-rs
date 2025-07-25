@@ -81,7 +81,11 @@ async fn test_responds_smol() {
 
     let_assert!(
         Err(Error::QueueFull) = requester
-            .request_for::<_, u32>(&requested_full_queue.addr(), 0x1234, Duration::ZERO)
+            .request_for::<_, u32>(
+                &requested_full_queue.addr(),
+                0x1234,
+                Duration::from_millis(500)
+            )
             .await
     );
 
@@ -158,7 +162,11 @@ async fn test_responds_tokio() {
 
     let_assert!(
         Err(Error::QueueFull) = requester
-            .request_for::<_, u32>(&requested_full_queue.addr(), 0x1234, Duration::ZERO)
+            .request_for::<_, u32>(
+                &requested_full_queue.addr(),
+                0x1234,
+                Duration::from_millis(500)
+            )
             .await
     );
 
