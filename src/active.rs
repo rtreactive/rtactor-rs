@@ -63,14 +63,14 @@ macro_rules! define_sync_accessor{
     =>
     {
         pub struct $sync_accessor_name {
-            active_actor: ::rtactor::ActiveMailbox,
+            mailbox: ::rtactor::ActiveMailbox,
             target_addr: ::rtactor::Addr,
         }
 
         impl $sync_accessor_name {
             pub fn new(target_addr: &::rtactor::Addr) -> $sync_accessor_name {
                 $sync_accessor_name {
-                    active_actor: ::rtactor::ActiveMailbox::new(1),
+                    mailbox: ::rtactor::ActiveMailbox::new(1),
                     target_addr: target_addr.clone(),
                 }
             }
@@ -84,7 +84,7 @@ macro_rules! define_sync_accessor{
             T: 'static + Send,
             {
                 let addr = self.target_addr.clone();
-                self.active_actor.send_notification(&addr, data)
+                self.mailbox.send_notification(&addr, data)
             }
             fn request_for<TRequest, TResponse>(
                 &mut self,
@@ -96,7 +96,7 @@ macro_rules! define_sync_accessor{
                 TResponse: 'static + Send + Sized
             {
                 let addr = self.target_addr.clone();
-                self.active_actor.request_for(&addr, request_data, timeout)
+                self.mailbox.request_for(&addr, request_data, timeout)
             }
 
         }

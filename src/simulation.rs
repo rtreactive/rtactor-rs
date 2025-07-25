@@ -48,7 +48,7 @@ macro_rules! define_sim_sync_accessor{
     =>
     {
         pub struct $sync_accessor_name<'a> {
-            active_actor: ::rtactor::ActiveMailbox,
+            mailbox: ::rtactor::ActiveMailbox,
             target_addr: ::rtactor::Addr,
             disp: &'a std::cell::RefCell<::rtactor::simulation::SimulationDispatcher>,
         }
@@ -56,7 +56,7 @@ macro_rules! define_sim_sync_accessor{
         impl<'a> $sync_accessor_name<'a> {
             pub fn new<'b>(disp: &'a std::cell::RefCell<::rtactor::simulation::SimulationDispatcher>, target_addr: &'b::rtactor::Addr) -> $sync_accessor_name<'a> {
                 $sync_accessor_name {
-                    active_actor: ::rtactor::ActiveMailbox::new(1),
+                    mailbox: ::rtactor::ActiveMailbox::new(1),
                     target_addr: target_addr.clone(),
                     disp,
                 }
@@ -71,7 +71,7 @@ macro_rules! define_sim_sync_accessor{
             T: 'static + Send,
             {
                 let addr = self.target_addr.clone();
-                self.active_actor.send_notification(&addr, data)
+                self.mailbox.send_notification(&addr, data)
             }
             fn request_for<TRequest, TResponse>(
                 &mut self,
@@ -83,7 +83,7 @@ macro_rules! define_sim_sync_accessor{
                 TResponse: 'static + Send + Sized
             {
                 let addr = self.target_addr.clone();
-                self.disp.borrow_mut().active_request_for(&mut self.active_actor, &addr, request_data, timeout)
+                self.disp.borrow_mut().active_request_for(&mut self.mailbox, &addr, request_data, timeout)
             }
 
         }
@@ -143,7 +143,7 @@ impl SimulationDispatcher {
         self.process_until_cond(self.now() + duration, break_func);
     }
     /*
-        fn wait_active_message(&mut self, active_actor: &mut ActiveMailbox, timeout: Duration) -> Result<Message, actor::Error>
+        fn wait_active_message(&mut self, mailbox: &mut ActiveMailbox, timeout: Duration) -> Result<Message, actor::Error>
         {
 
         }
