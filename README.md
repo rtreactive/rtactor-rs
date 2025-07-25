@@ -100,6 +100,29 @@ executed in the thread of the unit test, it removes thread-safety concerns from
 unit tests. The time is simulated, so that the unit test does not depend on the
 execution speed and use cases with very long durations can be tested.
 
+### Async Integration
+
+While `rtactor` is designed for real-time constraints where traditional async
+runtimes are impractical, the framework provides async integration features for
+bridging with async ecosystems.
+
+The `async-actor` feature allows reactive actors to seamlessly interact with
+async code through async message sending and receiving interfaces.
+This enables hybrid architectures where time-critical components use
+`rtactor`'s deterministic dispatching while non-critical components leverage
+the broader async ecosystem.
+The async interfaces maintain the same request-response and notification
+patterns as the synchronous API, but return futures that can be awaited in
+async contexts. This is particularly useful for integrating with async I/O
+operations, web servers, or other async libraries while preserving the
+real-time guarantees for critical processing paths.
+
+The `async-tokio` and `async-smol` features provide timeout implementations
+for those runtimes, for specific calls that accept a timeout.
+If none of those features are enabled, timeouts are ignored and calls wait
+indefinitely. This behavior is explained in detail in the relevant functions
+documentation.
+
 ## A minimal example of a reactive actor <a name="h2_minimal_example"></a>
 
 Let's start with a very simple example that does almost nothing. A `Client` struct and
@@ -514,7 +537,7 @@ fn test_broadcaster_simulated() {
     // Create an active actor to simulate the CAN controller. Here the
     // actor interface is used to fake the behavior. It is also possible to
     // use mock created with mock libs like `mockall`.
-    let mut fake_can = rt::ActiveActor::new(10);
+    let mut fake_can = rt::ActiveMailbox::new(10);
 
     // It is necessary to bring these trait to the scope to use them.
     use crate::acceleration_broadcaster::{SyncNotifier, SyncRequester};
@@ -550,7 +573,7 @@ fn test_broadcaster_simulated() {
         // It is very important to use the method `active_wait_message*` of the dispatcher
         // when working with active actors. This insures processing of the queued messages
         // in the dispatcher and use of the simulated time. It's not the case if
-        // `ActiveActor::wait_message*` methods of `ActiveActor` are used.
+        // `ActiveMailbox::wait_message*` methods of `ActiveMailbox` are used.
         let msg = disp
             .borrow_mut()
             .active_wait_message_for(&mut fake_can, Duration::ZERO)
@@ -618,7 +641,7 @@ fn test_broadcaster_threaded() {
     );
     use crate::acceleration_broadcaster::SyncRequester;
 
-    let fake_can = rt::ActiveActor::new(10);
+    let fake_can = rt::ActiveMailbox::new(10);
 
     // Simply start and stop the broadcaster.
     broadcaster_accessor
@@ -671,5 +694,5 @@ allocated from a memory pool, is a possible solution to have to only handle
 
 ### Rust version
 
-This project was tested with rust `1.64.0` and rust `1.86.0`.
+This project is tested with rust `1.75.0` and rust `1.86.0`.
 Version in between were not tested but should work.

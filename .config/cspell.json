@@ -7,7 +7,6 @@
     "confs",
     "datagram",
     "disp",
-    "dtolnay",
     "foobar",
     "millis",
     "mockall",
@@ -22,8 +21,8 @@
     "resp",
     "rstest",
     "rtactor",
-    "struct",
-    "Swatinem"
+    "smol",
+    "struct"
   ],
   "ignorePaths": [
     "target/**"
@@ -39,9 +38,12 @@
     {
       "filename": "**/*.yml",
       "words": [
+        "clippy",
+        "dtolnay",
         "rustc",
         "rustfmt",
-        "clippy"
+        "rustup",
+        "Swatinem"
       ]
     }
   ]

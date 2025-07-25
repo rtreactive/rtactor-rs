@@ -41,7 +41,7 @@
 //! A structure can add the generated methods by deriving `SyncNotifier` and
 //! implementing the methods of `SyncAccessData`. The macro `define_sync_accessor!()`
 //! found in create `rtactor` can be used to generate a struct that
-//! allows easy access with its internal ActiveActor:
+//! allows easy access with its internal ActiveMailbox:
 //! ```rs
 //! define_sync_accessor!(MyNotifSyncAccessor, SyncNotifier)
 //!
@@ -77,7 +77,7 @@
 //! A structure can add the generated methods by deriving `SyncRequester` and
 //! implementing the methods of `SyncAccessor`. The macro `define_sync_notifier!()`
 //! found in create `rtactor` can be used to generate a struct that
-//! allows easy access with its internal ActiveActor:
+//! allows easy access with its internal ActiveMailbox:
 //! ```rs
 //! define_sync_accessor!(MySyncAccessor, SyncNotifier, SyncRequester)
 //!
@@ -403,6 +403,145 @@ pub fn derive_sync_requester(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         pub trait #trait_name : ::rtactor::SyncAccessor {
+            #variant_requester_functions
+        }
+    };
+
+    if PRINT_GENERATED_MACRO_CODE {
+        println!("expanded='{}'", expanded);
+    }
+    TokenStream::from(expanded)
+}
+
+// see for attributes():
+// https://stackoverflow.com/questions/42484062/how-do-i-process-enum-struct-field-attributes-in-a-procedural-macro
+#[proc_macro_derive(AsyncRequester, attributes(response_val))]
+pub fn derive_async_requester(input: TokenStream) -> TokenStream {
+    // See https://doc.servo.org/syn/derive/struct.DeriveInput.html
+    let input: DeriveInput = parse_macro_input!(input as DeriveInput);
+
+    // get enum name
+    let enum_name = &input.ident;
+    let data = &input.data;
+
+    let mut variant_requester_functions;
+
+    // data is of type syn::Data
+    // See https://doc.servo.org/syn/enum.Data.html
+    match data {
+        // Only if data is an enum, we do parsing
+        Data::Enum(data_enum) => {
+            // data_enum is of type syn::DataEnum
+            // https://doc.servo.org/syn/struct.DataEnum.html
+
+            variant_requester_functions = TokenStream2::new();
+
+            // Iterate over enum variants
+            // `variants` if of type `Punctuated` which implements IntoIterator
+            //
+            // https://doc.servo.org/syn/punctuated/struct.Punctuated.html
+            // https://doc.servo.org/syn/struct.Variant.html
+            for variant in &data_enum.variants {
+                // Variant's name
+                let variant_name = &variant.ident;
+
+                // construct an identifier named <variant_name> for function name
+                // We convert it to snake case using `to_case(Case::Snake)`
+                // For example, if variant is `HelloWorld`, it will generate `is_hello_world`
+                let mut request_func_name =
+                    format_ident!("{}", variant_name.to_string().to_case(Case::Snake));
+                request_func_name.set_span(variant_name.span());
+
+                let return_type = if let Some(ref a) =
+                    variant.attrs.iter().find(|a| match a.path.get_ident() {
+                        Some(ident) => ident == "response_val",
+                        None => false,
+                    }) {
+                    if let Ok(types) = a.parse_args::<syn::Type>() {
+                        Some(types)
+                    } else if a.parse_args::<syn::parse::Nothing>().is_ok() {
+                        None
+                    } else {
+                        panic!(
+                            "attribute '{}' parsing failed for variant '{}'",
+                            a.to_token_stream(),
+                            variant_name
+                        );
+                    }
+                } else {
+                    None
+                };
+
+                let method_return_type = match return_type.clone() {
+                    Some(ret_type) => {
+                        let token_stream = ret_type.into_token_stream();
+                        quote!(#token_stream)
+                    }
+                    None => quote!(()),
+                };
+
+                let ok_var_name = match return_type.clone() {
+                    Some(_) => quote!(variant_data),
+                    None => quote!(),
+                };
+
+                let ok_ret_value = match return_type.clone() {
+                    Some(_) => quote!(variant_data),
+                    None => quote!(()),
+                };
+
+                // Variant can have unnamed fields like `Variant(i32, i64)`
+                // Variant can have named fields like `Variant {x: i32, y: i32}`
+                // Variant can be named Unit like `Variant`
+                match &variant.fields {
+                    Fields::Named(fields) => {
+                        let field_name: Vec<_> =
+                            fields.named.iter().map(|field| &field.ident).collect();
+                        let field_type: Vec<_> =
+                            fields.named.iter().map(|field| &field.ty).collect();
+
+                        variant_requester_functions.extend(quote!(
+                            async fn #request_func_name( &mut self, #( #field_name : #field_type, )* duration: std::time::Duration) -> Result<#method_return_type, ::rtactor::Error> {
+                                match self.request_for::<#enum_name, Response>(#enum_name::#variant_name { #( #field_name : #field_name, )*}, duration).await
+                                {
+                                    Ok(Response::#variant_name(#ok_var_name)) => Ok(#ok_ret_value),
+                                    Ok(_) => Err(::rtactor::Error::DowncastFailed),
+                                    Err(err) => Err(err),
+                                }
+                            }
+                        ));
+                    }
+                    Fields::Unnamed(_) => {
+                        panic!(
+                            "AsyncRequester do not accept Unnamed variant and '{}' is one.",
+                            variant_name
+                        );
+                    }
+                    Fields::Unit => {
+                        variant_requester_functions.extend(quote!(
+                            async fn #request_func_name( &mut self, duration: std::time::Duration) -> Result<#method_return_type, ::rtactor::Error> {
+                                match self.request_for::<#enum_name, Response>(Request::#variant_name, duration).await
+                                {
+                                    Ok(Response::#variant_name(#ok_var_name)) => Ok(#ok_ret_value),
+                                    Ok(_) => Err(::rtactor::Error::DowncastFailed),
+                                    Err(err) => Err(err),
+                                }
+                            }
+                        ));
+                    }
+                };
+            }
+        }
+        _ => panic!(
+            "AsyncRequester is only valid for enums and '{}' is not one.",
+            enum_name
+        ),
+    };
+
+    let trait_name = format_ident!("{}", "AsyncRequester");
+
+    let expanded = quote! {
+        pub trait #trait_name : ::rtactor::AsyncAccessor {
             #variant_requester_functions
         }
     };

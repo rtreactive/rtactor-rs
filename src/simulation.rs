@@ -7,7 +7,7 @@ use super::actor::{self, Message, RequestId};
 use super::reactive::{self, ProcessContext};
 use crate::dispatcher::Dispatcher;
 use crate::mpsc_dispatcher::{self, MpscDispatcher};
-use crate::{ActiveActor, Addr, Error};
+use crate::{ActiveMailbox, Addr, Error};
 
 use std::ops::ControlFlow;
 use std::time;
@@ -48,7 +48,7 @@ macro_rules! define_sim_sync_accessor{
     =>
     {
         pub struct $sync_accessor_name<'a> {
-            active_actor: ::rtactor::ActiveActor,
+            mailbox: ::rtactor::ActiveMailbox,
             target_addr: ::rtactor::Addr,
             disp: &'a std::cell::RefCell<::rtactor::simulation::SimulationDispatcher>,
         }
@@ -56,7 +56,7 @@ macro_rules! define_sim_sync_accessor{
         impl<'a> $sync_accessor_name<'a> {
             pub fn new<'b>(disp: &'a std::cell::RefCell<::rtactor::simulation::SimulationDispatcher>, target_addr: &'b::rtactor::Addr) -> $sync_accessor_name<'a> {
                 $sync_accessor_name {
-                    active_actor: ::rtactor::ActiveActor::new(1),
+                    mailbox: ::rtactor::ActiveMailbox::new(1),
                     target_addr: target_addr.clone(),
                     disp,
                 }
@@ -71,7 +71,7 @@ macro_rules! define_sim_sync_accessor{
             T: 'static + Send,
             {
                 let addr = self.target_addr.clone();
-                self.active_actor.send_notification(&addr, data)
+                self.mailbox.send_notification(&addr, data)
             }
             fn request_for<TRequest, TResponse>(
                 &mut self,
@@ -83,7 +83,7 @@ macro_rules! define_sim_sync_accessor{
                 TResponse: 'static + Send + Sized
             {
                 let addr = self.target_addr.clone();
-                self.disp.borrow_mut().active_request_for(&mut self.active_actor, &addr, request_data, timeout)
+                self.disp.borrow_mut().active_request_for(&mut self.mailbox, &addr, request_data, timeout)
             }
 
         }
@@ -143,7 +143,7 @@ impl SimulationDispatcher {
         self.process_until_cond(self.now() + duration, break_func);
     }
     /*
-        fn wait_active_message(&mut self, active_actor: &mut ActiveActor, timeout: Duration) -> Result<Message, actor::Error>
+        fn wait_active_message(&mut self, mailbox: &mut ActiveMailbox, timeout: Duration) -> Result<Message, actor::Error>
         {
 
         }
@@ -232,33 +232,33 @@ impl SimulationDispatcher {
         self.process_until(reactive::Instant::INFINITY);
     }
 
-    /// Wait indefinitely that an ActiveActor receives a message.
-    pub fn active_wait_message(&mut self, active: &mut ActiveActor) -> Result<Message, Error> {
+    /// Wait indefinitely that an ActiveMailbox receives a message.
+    pub fn active_wait_message(&mut self, active: &mut ActiveMailbox) -> Result<Message, Error> {
         self.active_wait_message_until(active, reactive::Instant::INFINITY)
     }
 
-    /// Wait for a given duration that an ActiveActor receives a message.
+    /// Wait for a given duration that an ActiveMailbox receives a message.
     pub fn active_wait_message_for(
         &mut self,
-        active: &mut ActiveActor,
+        active: &mut ActiveMailbox,
         duration: Duration,
     ) -> Result<Message, Error> {
         self.active_wait_message_until(active, self.now() + duration)
     }
 
-    /// Wait until a point in time that an ActiveActor receives a message.
+    /// Wait until a point in time that an ActiveMailbox receives a message.
     pub fn active_wait_message_until(
         &mut self,
-        active: &mut ActiveActor,
+        active: &mut ActiveMailbox,
         instant: reactive::Instant,
     ) -> Result<Message, Error> {
         self.active_wait_message_until_cond(active, instant, || ControlFlow::Continue(()))
     }
 
-    /// Wait until a point in time that an ActiveActor receives a message or a condition is met.
+    /// Wait until a point in time that an ActiveMailbox receives a message or a condition is met.
     pub fn active_wait_message_until_cond<F>(
         &mut self,
-        active: &mut ActiveActor,
+        active: &mut ActiveMailbox,
         instant: reactive::Instant,
         mut break_func: F,
     ) -> Result<Message, Error>
@@ -289,10 +289,10 @@ impl SimulationDispatcher {
         }
     }
 
-    /// Execute a request with a `ActiveActor` until either the response arrives or `instant` is reached.
+    /// Execute a request with a `ActiveMailbox` until either the response arrives or `instant` is reached.
     pub fn active_request_until<TRequest, TResponse>(
         &mut self,
-        active: &mut ActiveActor,
+        active: &mut ActiveMailbox,
         dst: &actor::Addr,
         request_data: TRequest,
         instant: reactive::Instant,
@@ -306,11 +306,11 @@ impl SimulationDispatcher {
         })
     }
 
-    /// Execute a request with a `ActiveActor` until either the response arrives, `break_func` breaks
+    /// Execute a request with a `ActiveMailbox` until either the response arrives, `break_func` breaks
     /// or `instant` is reached.
     pub fn active_request_until_cond<TRequest, TResponse, F>(
         &mut self,
-        active: &mut ActiveActor,
+        active: &mut ActiveMailbox,
         dst: &actor::Addr,
         request_data: TRequest,
         instant: reactive::Instant,
@@ -362,11 +362,11 @@ impl SimulationDispatcher {
         }
     }
 
-    /// Execute a request with a `ActiveActor` until either the response arrives
+    /// Execute a request with a `ActiveMailbox` until either the response arrives
     /// or `duration` elapses.
     pub fn active_request_for<TRequest, TResponse>(
         &mut self,
-        active: &mut ActiveActor,
+        active: &mut ActiveMailbox,
         dst: &actor::Addr,
         request_data: TRequest,
         duration: Duration,

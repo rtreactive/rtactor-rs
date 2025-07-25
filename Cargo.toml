@@ -6,20 +6,35 @@ license = "MIT"
 description = "An Actor framework specially designed for Real-Time constrained use cases."
 readme = "README.md"
 repository = "https://github.com/rtreactive/rtactor-rs"
-rust-version = "1.64"
+rust-version = "1.75"
 categories = ["asynchronous", "concurrency", "embedded"]
 keywords = ["real-time", "actor", "framework", "async"]
 
 [dependencies]
-rtactor-macros = { version="0.5.0", path = "rtactor-macros" }
+async-channel = { version = "2", optional = true }
 mockall = {version = ">= 0.11, <= 0.13", optional = true}
+rtactor-macros = { version="0.5.0", path = "rtactor-macros" }
+smol = { version = "2.0",  optional = true }
+tokio = { version = "1.46", features = ["time", "macros", "rt-multi-thread"], optional = true }
 
 [dev-dependencies]
-oorandom = "11" # rand crate is way to big, complex and difficult to port to MCU
-assert2 = "0.3"
-panic-context = "0.1"
-log = "0.4"
-env_logger = ">= 0.9, <= 0.11"
-mockall= ">= 0.11, <= 0.13"
-rstest = ">=0.15, <= 0.25"
 approx = "0.5"
+assert2 = "0.3"
+env_logger = ">= 0.9, <= 0.11"
+log = "0.4"
+macro_rules_attribute = "0.2.0"
+mockall= ">= 0.11, <= 0.13"
+oorandom = "11" # rand crate is way to big, complex and difficult to port to MCU
+panic-context = "0.1"
+rstest = ">=0.15, <= 0.25"
+smol = "2.0"
+smol-macros = "0.1"
+tokio-test = "0.4"
+
+[features]
+default = ["async-actor"]
+async-actor = ["dep:async-channel"]
+# If both `async-tokio` and a `async-smol` are activated, timeouts are implemented with tokio.
+# If none of them are activated, async methods with timeout argument never time out.
+async-tokio = ["async-actor", "dep:tokio"]
+async-smol = ["async-actor", "dep:smol"]

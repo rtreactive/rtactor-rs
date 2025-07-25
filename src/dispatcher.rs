@@ -4,7 +4,7 @@ use rtactor_macros::{ResponseEnum, SyncRequester};
 use std::boxed::Box;
 use std::time::Duration;
 
-use crate::ActiveActor;
+use crate::ActiveMailbox;
 
 use super::actor::Addr;
 use super::reactive::Behavior;
@@ -75,7 +75,7 @@ pub enum Request {
 
 /// An accessor for a dispatcher with specialized functions.
 pub struct SyncAccessor {
-    active_actor: ActiveActor,
+    mailbox: ActiveMailbox,
     disp_addr: Addr,
 }
 
@@ -83,7 +83,7 @@ impl SyncAccessor {
     /// Create an accessor from a dispatcher address.
     pub fn new(disp_addr: &Addr) -> Self {
         Self {
-            active_actor: ActiveActor::new(1),
+            mailbox: ActiveMailbox::new(1),
             disp_addr: disp_addr.clone(),
         }
     }
@@ -95,7 +95,7 @@ impl SyncAccessor {
         _join_handle: std::thread::JoinHandle<()>,
     ) -> Self {
         Self {
-            active_actor: ActiveActor::new(1),
+            mailbox: ActiveMailbox::new(1),
             disp_addr,
         }
     }
@@ -117,7 +117,7 @@ impl SyncAccessor {
     where
         T: Behavior + Send + 'static,
     {
-        let result = self.active_actor.request_for::<_, Response>(
+        let result = self.mailbox.request_for::<_, Response>(
             &self.disp_addr,
             Request::RegisterReactive {
                 behavior: Cell::new(Some(Box::new(reactive))),
@@ -213,7 +213,7 @@ impl SyncAccessor {
         F: FnOnce(&mut dyn Dispatcher) -> T + Send + 'static,
         T: Send + 'static + Sized,
     {
-        let result = self.active_actor.request_for::<_, Box<dyn Any + Send>>(
+        let result = self.mailbox.request_for::<_, Box<dyn Any + Send>>(
             &self.disp_addr,
             Request::ExecuteFn {
                 executable_fn: Cell::new(Box::new(move |disp| Box::new((f)(disp)))),
@@ -244,7 +244,7 @@ impl SyncAccessor {
             return Ok(());
         }
 
-        match self.active_actor.request_for::<_, Response>(
+        match self.mailbox.request_for::<_, Response>(
             &self.disp_addr,
             Request::StopDispatcher {},
             timeout,
